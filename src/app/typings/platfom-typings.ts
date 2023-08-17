@@ -66,9 +66,16 @@ export interface GenericIndexSignature<T> {
 
 // Just Dummay Interface
 export interface IBarResponse{
-    spillover?:string;
+    spillOver?:string;
     available?:string;
     occupied?:string;
     reserved?:string;
 }
 
+
+export enum BarOccupancyEnum {
+    spillOver = 'spillOver',
+    available = 'available',
+    occupied = 'occupied',
+    reserved = 'reserved'
+}

@@ -2,7 +2,7 @@ export const WeeklyData = [
   {
     spillOver: 50,
     available: 30,
-    occupied: 20,
+    occupied: 50,
   },
 
   {

@@ -53,7 +53,7 @@ export class ChartsService {
    * it always return the Bar Chart Axis Instances and it could use further requirements
    */
   onCreateChartAxis(barchartAxisObject: BarChatAxis<string, string>) : BarChatAxis<string, string>{
-    const margin = { top: 20, right: 20, bottom: 30, left: 30 }
+    const margin = { top: 0, right: 20, bottom: 30, left: 30 }
     const width = barchartAxisObject?.dim[0] - margin.left - margin.right
     const height =barchartAxisObject?.dim[1] - margin.top - margin.bottom
 

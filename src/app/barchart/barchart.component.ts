@@ -11,6 +11,7 @@ import {
   BarChatAxis,
   BarChatOutline,
   BarCoordinates,
+  BarOccupancyEnum,
   GenericIndexSignature,
   IBar,
   IBarResponse,
@@ -74,9 +75,9 @@ export class BarchartComponent implements AfterViewInit, AfterContentInit {
     }
 
     const yAxis: BarChatOutline<string> = {
-      ticksIndices: [0, 1, 2, 3, 4, 5],
-      values: [null, '0', '25', '50', '75', '100'],
-      domains: [0, 5],
+      ticksIndices: [0, 1, 2, 3, 4],
+      values: [null, '25', '50', '75', '100'],
+      domains: [0, 4],
       ranges: [this.getViewDim[1], 0],
     }
 
@@ -102,10 +103,6 @@ export class BarchartComponent implements AfterViewInit, AfterContentInit {
    * To draw the bar chart there are some dependencies like axis should render and proper context about charts , it means that we should have the ticks groups where all bars get appended , for that visit to chart service and pass the appropriate  args
    */
   onDrawOccupancyBarCharts(barChartAxis: BarChatAxis<string, string>) {
-    const horizontal = true
-    // TODO: currently we do not have any data so we assumed like 1, 2, and 3 are considar as Available, Spill-Over and Occupied
-    const barGroups = [1, 2, 3]
-    const barColors = ['#191919', 'red', 'green']
 
     // Construct the Bar Chart Data
     const collections = this.onConstructBarChartData(WeeklyData as any)
@@ -117,7 +114,7 @@ export class BarchartComponent implements AfterViewInit, AfterContentInit {
     xNodeList?.forEach((i, index) => {
       // Ignore the First Index
       if (index !== 0) {
-        this.onDrawBar(i as unknown as d3SelectionBase,collections[index-1])
+        this.onRenderBar(i as unknown as d3SelectionBase,collections[index-1])
       }
     })
   }
@@ -136,28 +133,28 @@ export class BarchartComponent implements AfterViewInit, AfterContentInit {
     barResponse?.forEach((br, index) => {
       const genericIbar: GenericIndexSignature<IBar> = {}
       // Construct now every Ibar Object for Occupancy bar Chart
-      Object.entries(br).forEach((pair, index) => {
+      Object.entries(br).forEach((pair) => {
         const key = pair[0]
-        const val = +pair[1]
+        const val = pair[1]
 
         // Actual Percentage Respective to the SVG  View Groups
         const yActualPercentage = (this.getViewDim[1] * val) / 100
         const yPosition = this.getViewDim[1] - yActualPercentage
 
-        const xActualPercentage = (this.getViewDim[1] * val) / 100
-        const xPosition = this.getViewDim[1] - xActualPercentage
+        const xActualPercentage = (this.getViewDim[0] * val) / 100
+        const xPosition = (index + 1) * this.getXAxisGap
 
-        const actualPercentage = isHorizontal ? xActualPercentage : yActualPercentage;
+        const actualPercentage = isHorizontal ? yActualPercentage : xActualPercentage;
 
 
         const coors: BarCoordinates = {
           progressHeight: actualPercentage,
           progressWidth: 20,
           x: xPosition,
-          y: yPosition,
+          y: yPosition - 30,
         }
         const ibar: IBar = {
-          color: '#red',
+          color: this.onGetColorBasedOnOccupancy(key),
           barName: key,
           coords: coors,
         }
@@ -171,9 +168,50 @@ export class BarchartComponent implements AfterViewInit, AfterContentInit {
     return collections
   }
 
-  onDrawBar(group: d3SelectionBase,genericIndexSignature:GenericIndexSignature<IBar>) {
+  onRenderBar(group: d3SelectionBase,genericIndexSignature:GenericIndexSignature<IBar>) {
 
-     genericIndexSignature
+    let localGap = 0;
 
+    const bar = (data:IBar,group:d3SelectionBase)=> {
+      group?.append('rect')
+      .attr('x',data?.coords?.x + localGap)
+      .attr('y',data?.coords?.y + '')
+      .attr('width',data?.coords?.progressWidth+'')
+      .attr('height',data?.coords?.progressHeight+'')
+      .attr('fill',data?.color+'')
+
+    }
+
+    const spillOver = genericIndexSignature['spillOver'];
+    const available = genericIndexSignature['available'];
+    const occupied  = genericIndexSignature['occupied'];
+
+    bar(available,this.viewSVGGroup)
+    localGap+=20
+    bar(spillOver,this.viewSVGGroup)
+    localGap+=20
+    bar(occupied,this.viewSVGGroup)
+  }
+
+
+
+  onGetColorBasedOnOccupancy(keyName:string):string {
+
+    switch(keyName) {
+
+      case BarOccupancyEnum.spillOver:
+        return 'red'
+
+       case BarOccupancyEnum.available:
+        return '#191919'
+
+       case BarOccupancyEnum.occupied:
+        return 'green'
+
+       case BarOccupancyEnum.reserved:
+        return 'blue'
+    }
+
+    return ''
   }
 }
