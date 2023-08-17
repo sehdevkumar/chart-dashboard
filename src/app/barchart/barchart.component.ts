@@ -1,55 +1,75 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core'
-import { d3Selection } from '../typings/platfom-typings'
+import {
+  AfterContentInit,
+  AfterViewInit,
+  Component,
+  ElementRef,
+  Input,
+  OnInit,
+  ViewChild,
+} from '@angular/core'
+import {
+  BarChatAxis,
+  BarChatOutline,
+  d3SelectionBase,
+} from '../typings/platfom-typings'
 import * as d3 from 'd3'
+import { ChartsService } from '../charts.service'
 
 @Component({
   selector: 'app-barchart',
   templateUrl: './barchart.component.html',
   styleUrls: ['./barchart.component.scss'],
 })
-export class BarchartComponent implements OnInit {
-  @ViewChild('visualization', { static: true })
-  private chartContainer!: ElementRef<SVGAElement>
+export class BarchartComponent implements AfterViewInit, AfterContentInit {
+  //  Chart View Height And Width
+  @Input() chartWidth: number = 800
+  @Input() chartHeight: number = 500
+  @ViewChild('visualization')
+  private chartContainer!: ElementRef<HTMLElement>
 
-  constructor() {}
+  // SVG main Group
+  viewSVGGroup!: d3SelectionBase
 
-  ngOnInit() {
-    this.createChart()
-  }
-
-  createChart() {
-    const margin = { top: 20, right: 20, bottom: 30, left: 40 }
-    const width = 500 - margin.left - margin.right
-    const height = 300 - margin.top - margin.bottom
-
-    const svg = d3
-      .select(this.chartContainer.nativeElement)
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
-      .append('g')
-      .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
-
-    // Sample data
-    const data = [
-      { x: 1, y: 5 },
-      { x: 2, y: 10 },
-      { x: 3, y: 8 },
-      // ... add more data points
+  get getViewDim() {
+    return [
+      this.chartContainer?.nativeElement?.offsetWidth,
+      this.chartContainer?.nativeElement?.offsetHeight,
     ]
-
-    const xScale = d3.scaleLinear().domain([0, 3]).range([0, width])
-
-    const yScale = d3.scaleLinear().domain([0, 10]).range([height, 0])
-
-    const xAxis = d3.axisBottom(xScale).tickFormat((d) => d.toString())
-    const yAxis = d3.axisLeft(yScale).tickFormat((d) => d.toString())
-
-    svg
-      .append('g')
-      .attr('class', 'x-axis')
-      .attr('transform', 'translate(0,' + height + ')')
-      .call(xAxis)
-
-    svg.append('g').attr('class', 'y-axis').call(yAxis)
   }
+
+  constructor(private cs: ChartsService) {}
+
+  ngAfterContentInit(): void {}
+
+  ngAfterViewInit(): void {
+    this.viewSVGGroup = this.cs?.onCreateSVGViewGroup(this.chartContainer)
+    this.onMonthly()
+  }
+
+  onMonthly() {
+    const xAxis: BarChatOutline<string> = {
+      ticksIndices: [0, 1, 2, 3, 4, 5],
+      values: [null, 'week1', 'week2', 'week3', 'week4', 'week5'],
+      domains: [0, 6],
+      ranges: [0, this.getViewDim[0]],
+    }
+
+    const yAxis: BarChatOutline<string> = {
+      ticksIndices: [0, 1, 2, 3, 4, 5],
+      values: [null, '0', '25', '50', '75', '100'],
+      domains: [0, 5],
+      ranges: [this.getViewDim[1], 0],
+    }
+
+    const barchartAxisObject: BarChatAxis<string, string> = {
+      xAxis,
+      yAxis,
+      dim:this.getViewDim,
+      parentViewGroup:this.viewSVGGroup,
+      childViewGroupList:[]
+    }
+
+   const object =  this.cs.onCreateChartAxis(barchartAxisObject);
+  }
+
 }
