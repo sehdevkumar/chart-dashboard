@@ -43,6 +43,15 @@ export class ChartsService {
   }
 
 
+  /**
+   * @description
+   *  if passed agrumnets are correct it will render a beautiful axis plot for charts
+   *
+   *  This function is use for draw the Axis for Charts
+   * @param barchartAxisObject
+   * @returns  {BarChatAxis<string, string>}
+   * it always return the Bar Chart Axis Instances and it could use further requirements
+   */
   onCreateChartAxis(barchartAxisObject: BarChatAxis<string, string>) : BarChatAxis<string, string>{
     const margin = { top: 20, right: 20, bottom: 30, left: 30 }
     const width = barchartAxisObject?.dim[0] - margin.left - margin.right
@@ -90,13 +99,17 @@ export class ChartsService {
       .append('g')
       .attr('class', 'x-axis')
       .attr('transform', 'translate(-40,' + height + ')')
-      .datum({})
       .call(xAxis)
-
-
     chartGroup.append('g').attr('class', 'y-axis').call(yAxis)
 
+    const xAxisTicksGroups = d3.selectAll(chartGroup).select('.x-axis').selectAll('.tick')
+    const yAxisTicksGroups = d3.selectAll(chartGroup).select('.y-axis').selectAll('.tick')
+
     barchartAxisObject.childViewGroupList = [chartGroup as any]
+    barchartAxisObject.xAxisTickGroups = xAxisTicksGroups as unknown as d3SelectionBase[]
+    barchartAxisObject.yAxisTickGroups = yAxisTicksGroups as unknown as d3SelectionBase[]
+
+
 
     return barchartAxisObject;
   }

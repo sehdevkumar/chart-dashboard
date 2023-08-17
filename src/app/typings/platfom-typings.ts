@@ -4,6 +4,8 @@ export type d3SelectionBase = d3.Selection<
   any,
   HTMLElement | any,
   any
+  |
+  NodeList
 >;
 
    interface AxisOutline<T> {
@@ -37,4 +39,36 @@ export type d3SelectionBase = d3.Selection<
       dim:Array<number>;
       parentViewGroup:d3SelectionBase;
       childViewGroupList:Array<d3SelectionBase>
+      xAxisTickGroups:Array<d3SelectionBase> | null;
+      yAxisTickGroups:Array<d3SelectionBase> | null;
     }
+
+
+
+
+export interface BarCoordinates {
+  progressHeight?:number;
+  progressWidth?:number;
+  x?:number;
+  y?:number;
+}
+
+export interface IBar{
+     color?:string;
+     barName?:string;
+     coords?: BarCoordinates;
+}
+
+export interface GenericIndexSignature<T> {
+  [key: string]: T;
+}
+
+
+// Just Dummay Interface
+export interface IBarResponse{
+    spillover?:string;
+    available?:string;
+    occupied?:string;
+    reserved?:string;
+}
+
