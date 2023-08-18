@@ -30,21 +30,17 @@ import { cloneDeep } from 'lodash'
   templateUrl: './barchart.component.html',
   styleUrls: ['./barchart.component.scss'],
 })
-export class BarchartComponent implements AfterViewInit , OnChanges {
+export class BarchartComponent implements AfterViewInit, OnChanges {
   //  Chart View Height And Width
   @Input() chartWidth: number = 820
   @Input() chartHeight: number = 500
-  @Input() chartRenderingType:BarChartRenderingType;
+  @Input() chartRenderingType: BarChartRenderingType
   @ViewChild('visualization')
   private chartContainer!: ElementRef<HTMLElement>
-
-  currentXGapFactor = 5
-  currentYGapFactor = 5
 
   // config
   viewDimConfig: IViewDimConfig
   barChartAxisInstance: IBarChartAxisInstance
-
   // SVG main Group
   viewSVGGroup!: d3SelectionBase
 
@@ -62,13 +58,17 @@ export class BarchartComponent implements AfterViewInit , OnChanges {
   constructor(private cs: ChartsService) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-     this.onRenderChart(this.chartRenderingType);
+    if (this.chartRenderingType) {
+      this.onRenderChart(this.chartRenderingType)
+    }
   }
 
   ngAfterViewInit(): void {
+
     this.viewDimConfig = this.cs.onConstructViewDimConfig(this.chartContainer)
     this.viewSVGGroup = this.cs?.onCreateSVGViewGroup(this.viewDimConfig)
-    this.onRenderChart(BarChartRenderingType.MONTHLY)
+
+    this.onRenderChart(BarChartRenderingType.WEEKLY);
   }
 
   onRenderChart(renderingType: BarChartRenderingType) {
@@ -84,7 +84,6 @@ export class BarchartComponent implements AfterViewInit , OnChanges {
         return
     }
   }
-
 
   // on Monthly
   onMonthly() {
@@ -189,9 +188,7 @@ export class BarchartComponent implements AfterViewInit , OnChanges {
     )
   }
 
-
-
-    onRenderOccupancyBarChart(
+  onRenderOccupancyBarChart(
     barChartAxisInstance: IBarChartAxisInstance,
     data: any,
     keyName: string,
@@ -221,6 +218,7 @@ export class BarchartComponent implements AfterViewInit , OnChanges {
     gp.selectAll('rect')
       .transition()
       .duration(800)
+      .ease(d3.easePolyInOut)
       .attr('y', (d, i, n) => yScale(+data[i]?.[keyName]))
       .attr(
         'height',
@@ -228,7 +226,6 @@ export class BarchartComponent implements AfterViewInit , OnChanges {
       )
       .delay((d, i) => i * 100)
   }
-
 
   /**
    * Get Color based on Occupancy
@@ -238,13 +235,13 @@ export class BarchartComponent implements AfterViewInit , OnChanges {
   onGetColorBasedOnOccupancy(keyName: string): string {
     switch (keyName) {
       case BarOccupancyEnum.spillOver:
-        return 'red'
+        return '#F55C1E'
 
       case BarOccupancyEnum.available:
         return '#191919'
 
       case BarOccupancyEnum.occupied:
-        return 'green'
+        return '#7BF403'
 
       case BarOccupancyEnum.reserved:
         return 'blue'

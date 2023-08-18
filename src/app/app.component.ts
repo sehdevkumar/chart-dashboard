@@ -10,6 +10,8 @@ export class AppComponent {
 
   changeFlag: BarChartRenderingType
 
+  type = BarChartRenderingType
+
   onChange(event) {
      console.log(event.target.value)
      this.changeFlag = event.target.value
