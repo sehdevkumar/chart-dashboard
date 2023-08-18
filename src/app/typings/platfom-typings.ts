@@ -1,81 +1,69 @@
-export type d3DragBehavior = d3.ZoomBehavior<Element, unknown>;
+import { ElementRef } from '@angular/core'
+
+export type d3DragBehavior = d3.ZoomBehavior<Element, unknown>
 export type d3SelectionBase = d3.Selection<
   d3.BaseType,
   any,
   HTMLElement | any,
-  any
-  |
-  NodeList
->;
+  any | NodeList
+>
 
-   interface AxisOutline<T> {
-      ticksIndices:Array<number>;
-      values:Array<T | null>;
-      domains:Array<number>;
-      ranges:Array<number>;
-    }
-
-
-
-    export interface AxisTitle {
-      x?:number;
-      y?:number;
-      rotationAngle?:number;
-      title:string
-    }
-
-    export type BarChatOutline<T>  = AxisOutline<T>;
-
-
-/**
- * @description
- * x => x Axis Values Generic Type.
- *
- * y => y Axis Values Generic Type.
- */
-    export interface BarChatAxis<X,Y>{
-      xAxis:BarChatOutline<X>;
-      yAxis:BarChatOutline<Y>;
-      dim:Array<number>;
-      parentViewGroup:d3SelectionBase;
-      childViewGroupList:Array<d3SelectionBase>
-      xAxisTickGroups:Array<d3SelectionBase> | null;
-      yAxisTickGroups:Array<d3SelectionBase> | null;
-    }
-
-
-
-
-export interface BarCoordinates {
-  progressHeight?:number;
-  progressWidth?:number;
-  x?:number;
-  y?:number;
+interface AxisOutline<T> {
+  ticksIndices: Array<number>
+  values: Array<T | null>
+  domains: Array<T>
+  ranges: Array<number>
 }
+export type BarChatOutline<T> = AxisOutline<T>
 
-export interface IBar{
-     color?:string;
-     barName?:string;
-     coords?: BarCoordinates;
-}
-
-export interface GenericIndexSignature<T> {
-  [key: string]: T;
+export interface IBarChartAxisInstance {
+  xScale:   d3.ScaleBand<any> |d3.ScaleLinear<any, any, never>
+  yScale: d3.ScaleLinear<any, any, never> | d3.ScaleBand<any>
+  viewGroup: d3SelectionBase
+  viewDimConfig: IViewDimConfig
+  axisOutlines: BarChatOutline<any>[]
 }
 
 
 // Just Dummay Interface
-export interface IBarResponse{
-    spillOver?:string;
-    available?:string;
-    occupied?:string;
-    reserved?:string;
+export interface IBarResponse {
+  spillOver?: string
+  available?: string
+  occupied?: string
+  reserved?: string
+}
+
+export enum BarOccupancyEnum {
+  spillOver = 'spillOver',
+  available = 'available',
+  occupied = 'occupied',
+  reserved = 'reserved',
+}
+
+export interface IViewDimConfig {
+  rendererInstance?: ElementRef
+  rendererHeight: number
+  rendererWidth: number
+  margin: ICustomMargin
+  viewHeight: number
+  viewWidth: number
+}
+
+export interface ICustomMargin {
+  top: number
+  right: number
+  bottom: number
+  left: number
 }
 
 
-export enum BarOccupancyEnum {
-    spillOver = 'spillOver',
-    available = 'available',
-    occupied = 'occupied',
-    reserved = 'reserved'
+export enum ChartEnumClass {
+   BAR_CHART_CLASS='bar-chart-class'
+}
+
+
+export enum BarChartRenderingType {
+   MONTHLY='MONTHLY',
+   WEEKLY='WEEKLY',
+   YEARLY='YEARLY'
 }

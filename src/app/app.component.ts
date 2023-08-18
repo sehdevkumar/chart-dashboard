@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { BarChartRenderingType } from './typings/platfom-typings';
 
 @Component({
   selector: 'app-root',
@@ -6,5 +7,11 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  title = 'dashboard';
+
+  changeFlag: BarChartRenderingType
+
+  onChange(event) {
+     console.log(event.target.value)
+     this.changeFlag = event.target.value
+  }
 }

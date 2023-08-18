@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core'
 import { RouterModule, Routes } from '@angular/router'
 import { BarchartComponent } from './barchart/barchart.component'
 import { LandingPageComponent } from './landing-page/landing-page.component'
+import { BarExampleComponent } from './bar-example/bar-example.component'
 
 const routes: Routes = [
   {
@@ -10,7 +11,7 @@ const routes: Routes = [
   },
   {
     path: 'barchart',
-    component: BarchartComponent,
+    component: BarExampleComponent,
   },
   {
     path: '',

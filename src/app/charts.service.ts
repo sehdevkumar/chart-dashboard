@@ -1,14 +1,42 @@
-import { ElementRef, Injectable } from '@angular/core';
-import * as d3 from 'd3';
-import { BarChatAxis, d3SelectionBase } from './typings/platfom-typings';
+import { ElementRef, Injectable } from '@angular/core'
+import * as d3 from 'd3'
+import {
+  BarChatOutline,
+  IBarChartAxisInstance,
+  IViewDimConfig,
+  d3SelectionBase,
+} from './typings/platfom-typings'
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ChartsService {
+  constructor() {}
 
-  constructor() { }
+  /**
+   * Construct the View Dim Configurations
+   * @param rendererNative
+   * @returns
+   */
+  onConstructViewDimConfig(rendererNative: ElementRef): IViewDimConfig {
+    const rendererHeight = rendererNative?.nativeElement?.offsetHeight
+    const rendererWidth = rendererNative?.nativeElement?.offsetWidth
 
+    const margin = { top: 10, right: 30, bottom: 90, left: 40 }
+    const viewWidth = rendererWidth - margin.left - margin.right
+    const viewHeight = rendererHeight - margin.top - margin.bottom
+
+    const config: IViewDimConfig = {
+      rendererHeight,
+      rendererWidth,
+      margin,
+      viewHeight,
+      viewWidth,
+      rendererInstance: rendererNative,
+    }
+
+    return config
+  }
 
   /**
    *  @description
@@ -18,99 +46,75 @@ export class ChartsService {
    * @param h
    * @returns
    */
-  onCreateSVGViewGroup(rendererNative:ElementRef,w?:number,h?:number) : d3SelectionBase {
+  onCreateSVGViewGroup(viewDimConfig: IViewDimConfig): d3SelectionBase {
 
-      const height = rendererNative?.nativeElement?.offsetHeight;
-      const width = rendererNative?.nativeElement?.offsetWidth;
+    const svgWidth =
+      viewDimConfig?.viewWidth +
+      viewDimConfig?.margin?.left +
+      viewDimConfig?.margin?.right
+    const svgHeight =
+      viewDimConfig?.viewHeight +
+      viewDimConfig?.margin?.top +
+      viewDimConfig?.margin?.bottom
 
-
-      const viewGroup = d3
-      .select(rendererNative?.nativeElement)
+    const viewGroup = d3
+      .select(viewDimConfig?.rendererInstance?.nativeElement)
       .append('svg')
       .attr('version', '1.1')
       .attr('xmlns', 'http://www.w3.org/2000/svg')
       .attr('xmlns:xlink', 'http://www.w3.org/1999/xlink')
       .attr('xmlns:xhtml', 'http://www.w3.org/1999/xhtml')
-      .attr('width', width)
-      .attr('height', height)
-      .attr('viewBox', `0 0 ${width} ${height}`)
+      .attr('width', svgWidth)
+      .attr('height', svgHeight)
+      .attr('viewBox', `0 0 ${svgWidth} ${svgHeight}`)
       .attr('preserveAspectRatio', 'xMinYMin meet')
       .style('background-color', 'transparent')
       .style('border-radius', 'inherit')
 
+    const finalGroup = viewGroup
+      .append('g')
+      .attr(
+        'transform',
+        `translate(${viewDimConfig?.margin.left},${viewDimConfig?.margin.top})`,
+      )
 
-      return viewGroup as unknown as d3SelectionBase;
+    return (finalGroup as unknown) as d3SelectionBase
   }
 
-
-  /**
-   * @description
-   *  if passed agrumnets are correct it will render a beautiful axis plot for charts
-   *
-   *  This function is use for draw the Axis for Charts
-   * @param barchartAxisObject
-   * @returns  {BarChatAxis<string, string>}
-   * it always return the Bar Chart Axis Instances and it could use further requirements
-   */
-  onCreateChartAxis(barchartAxisObject: BarChatAxis<string, string>) : BarChatAxis<string, string>{
-    const margin = { top: 0, right: 20, bottom: 30, left: 30 }
-    const width = barchartAxisObject?.dim[0] - margin.left - margin.right
-    const height =barchartAxisObject?.dim[1] - margin.top - margin.bottom
-
-    const chartGroup = barchartAxisObject?.parentViewGroup
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
-      .append('g')
-      .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
-
+  onCreateBarChartAxis(
+    svgGroup: d3SelectionBase,
+    viewDimConfig: IViewDimConfig,
+    axisOutlines: BarChatOutline<any>[],
+  ): IBarChartAxisInstance {
     const xScale = d3
-      .scaleLinear()
-      .domain(barchartAxisObject?.xAxis?.domains)
-      .range(barchartAxisObject?.xAxis?.ranges)
+      .scaleBand()
+      .range(axisOutlines[0]?.ranges)
+      .domain(axisOutlines[0]?.domains)
+      .padding(0.2)
+
+    svgGroup
+      .append('g')
+      .attr('transform', `translate(0,${viewDimConfig?.viewHeight})`)
+      .call(d3.axisBottom(xScale).tickSize(1))
+      .selectAll('text')
+      // .attr('transform', 'translate(-10,0)rotate(-45)')
+      .style('text-anchor', 'center')
 
     const yScale = d3
       .scaleLinear()
-      .domain(barchartAxisObject?.yAxis?.domains)
-      .range(barchartAxisObject?.yAxis?.ranges)
+      .domain(axisOutlines[1]?.domains)
+      .range(axisOutlines[1]?.ranges)
 
-    const getMutatedValue = (value: any) => {
-      if (value !== null) {
-        return value
-      }
+    svgGroup.append('g').call(d3.axisLeft(yScale).tickSize(1).ticks(4))
 
-      return ''
+    const BarChartAxisInstance: IBarChartAxisInstance = {
+      xScale: xScale,
+      yScale: yScale,
+      viewGroup: svgGroup,
+      viewDimConfig: viewDimConfig,
+      axisOutlines: axisOutlines,
     }
 
-    const xAxis = d3
-      .axisBottom(xScale)
-      .tickValues(barchartAxisObject?.xAxis?.ticksIndices)
-      .tickFormat(
-        (d) => '' + getMutatedValue(barchartAxisObject?.xAxis?.values[+d]),
-      )
-
-    const yAxis = d3
-      .axisLeft(yScale)
-      .tickValues(barchartAxisObject?.yAxis?.ticksIndices)
-      .tickFormat(
-        (d) => '' + getMutatedValue(barchartAxisObject?.yAxis?.values[+d]),
-      )
-
-    chartGroup
-      .append('g')
-      .attr('class', 'x-axis')
-      .attr('transform', 'translate(-40,' + height + ')')
-      .call(xAxis)
-    chartGroup.append('g').attr('class', 'y-axis').call(yAxis)
-
-    const xAxisTicksGroups = d3.selectAll(chartGroup).select('.x-axis').selectAll('.tick')
-    const yAxisTicksGroups = d3.selectAll(chartGroup).select('.y-axis').selectAll('.tick')
-
-    barchartAxisObject.childViewGroupList = [chartGroup as any]
-    barchartAxisObject.xAxisTickGroups = xAxisTicksGroups as unknown as d3SelectionBase[]
-    barchartAxisObject.yAxisTickGroups = yAxisTicksGroups as unknown as d3SelectionBase[]
-
-
-
-    return barchartAxisObject;
+    return BarChartAxisInstance
   }
 }

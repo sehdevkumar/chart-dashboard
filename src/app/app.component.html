@@ -1,11 +1,17 @@
+<select (change)="onChange($event)">
+   <option value="MONTHLY">Monthly</option>
+   <option value="WEEKLY">Weekly</option>
+   <option value="YEARLY">Yearly</option>
+</select>
 <div
-  class="container"
+  class="container-fluid"
   style="
-    height: 100%;
     display: grid;
-    grid-template-rows: 200px 1fr;
-    align-items: center;
+    grid-template-columns: repeat(auto-fit, minmax(0,1fr));
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
   "
 >
-<router-outlet></router-outlet>
+  <app-barchart [chartRenderingType]="changeFlag"></app-barchart>
 </div>
