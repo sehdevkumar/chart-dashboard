@@ -38,22 +38,25 @@ export enum BarOccupancyEnum {
   available = 'available',
   occupied = 'occupied',
   reserved = 'reserved',
+  hollow = 'hollow'
 }
 
 export interface IViewDimConfig {
   rendererInstance?: ElementRef
   rendererHeight: number
   rendererWidth: number
-  margin: ICustomMargin
+  margin: ICustomBarDim
   viewHeight: number
   viewWidth: number
 }
 
-export interface ICustomMargin {
+export interface ICustomBarDim {
   top: number
   right: number
   bottom: number
   left: number
+  height?:number;
+  width?:number;
 }
 
 

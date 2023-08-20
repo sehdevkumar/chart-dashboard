@@ -22,7 +22,7 @@ export class ChartsService {
     const rendererHeight = rendererNative?.nativeElement?.offsetHeight
     const rendererWidth = rendererNative?.nativeElement?.offsetWidth
 
-    const margin = { top: 10, right: 30, bottom: 90, left: 40 }
+    const margin = { top: 10, right: 30, bottom: 90, left: 50 }
     const viewWidth = rendererWidth - margin.left - margin.right
     const viewHeight = rendererHeight - margin.top - margin.bottom
 
@@ -95,7 +95,7 @@ export class ChartsService {
     svgGroup
       .append('g')
       .attr('transform', `translate(0,${viewDimConfig?.viewHeight})`)
-      .call(d3.axisBottom(xScale).tickSize(1))
+      .call(d3.axisBottom(xScale).tickSize(10))
       .selectAll('text')
       // .attr('transform', 'translate(-10,0)rotate(-45)')
       .style('text-anchor', 'center')
@@ -105,7 +105,7 @@ export class ChartsService {
       .domain(axisOutlines[1]?.domains)
       .range(axisOutlines[1]?.ranges)
 
-    svgGroup.append('g').call(d3.axisLeft(yScale).tickSize(1).ticks(4))
+    svgGroup.append('g').call(d3.axisLeft(yScale).tickSize(10).ticks(4))
 
     const BarChartAxisInstance: IBarChartAxisInstance = {
       xScale: xScale,

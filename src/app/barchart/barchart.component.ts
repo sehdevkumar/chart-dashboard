@@ -18,6 +18,7 @@ import {
   IBarResponse,
   IViewDimConfig,
   d3SelectionBase,
+  ICustomBarDim,
 } from '../typings/platfom-typings'
 import * as d3 from 'd3'
 import { ChartsService } from '../charts.service'
@@ -64,11 +65,10 @@ export class BarchartComponent implements AfterViewInit, OnChanges {
   }
 
   ngAfterViewInit(): void {
-
     this.viewDimConfig = this.cs.onConstructViewDimConfig(this.chartContainer)
     this.viewSVGGroup = this.cs?.onCreateSVGViewGroup(this.viewDimConfig)
 
-    this.onRenderChart(BarChartRenderingType.WEEKLY);
+    this.onRenderChart(BarChartRenderingType.YEARLY)
   }
 
   onRenderChart(renderingType: BarChartRenderingType) {
@@ -85,6 +85,37 @@ export class BarchartComponent implements AfterViewInit, OnChanges {
     }
   }
 
+  onAxisTextRender(
+    group: d3SelectionBase,
+    xAxisLabel: string,
+    yAxisLabel: string,
+  ) {
+    const xAxisLabelGroup = group
+      ?.append('text')
+      .text(xAxisLabel)
+      .attr('x', this.viewDimConfig?.viewWidth / 2)
+      .attr('y', this.viewDimConfig?.viewHeight + 50)
+      .style('text-anchor', 'middle')
+
+    xAxisLabelGroup?.raise()
+
+    const yAxisLabelGroup = group
+      ?.append('text')
+      .text(yAxisLabel)
+      .attr('x', 0)
+      .attr('y', this.viewDimConfig?.viewHeight / 2)
+      .attr(
+        'transform',
+        `translate(-${this.viewDimConfig?.viewHeight / 2 + 30},${
+          this.viewDimConfig?.viewHeight / 2
+        }) rotate(-90)`,
+      )
+      .style('text-anchor', 'middle')
+      .style('writing-mode', 'sideways-lr')
+
+    yAxisLabelGroup?.raise()
+  }
+
   // on Monthly
   onMonthly() {
     const xDomains = ['week1', 'week2', 'week3', 'week4', 'week5']
@@ -96,6 +127,7 @@ export class BarchartComponent implements AfterViewInit, OnChanges {
     // Dummy Response
     const response: Array<IBarResponse> = WeeklyData as any
     this.onRender(xDomains, xRange, yDomains, yRange, response)
+    this.onAxisTextRender(this.viewSVGGroup, 'Weeks', 'Occupancy percentage')
   }
 
   // on Yearly
@@ -121,6 +153,7 @@ export class BarchartComponent implements AfterViewInit, OnChanges {
     // Dummy Response
     const response: Array<IBarResponse> = WeeklyData as any
     this.onRender(xDomains, xRange, yDomains, yRange, response)
+    this.onAxisTextRender(this.viewSVGGroup, 'Yearly', 'Occupancy percentage')
   }
 
   // on Weekly
@@ -133,6 +166,7 @@ export class BarchartComponent implements AfterViewInit, OnChanges {
     // Dummy Response
     const response: Array<IBarResponse> = WeeklyData as any
     this.onRender(xDomains, xRange, yDomains, yRange, response)
+    this.onAxisTextRender(this.viewSVGGroup, 'Weekly', 'Occupancy percentage')
   }
 
   onRender(
@@ -171,6 +205,12 @@ export class BarchartComponent implements AfterViewInit, OnChanges {
     this.onRenderOccupancyBarChart(
       cloneDeep(this.barChartAxisInstance),
       cloneDeep(data),
+      'hollow',
+      0,
+    )
+    this.onRenderOccupancyBarChart(
+      cloneDeep(this.barChartAxisInstance),
+      cloneDeep(data),
       'occupied',
       0,
     )
@@ -204,27 +244,71 @@ export class BarchartComponent implements AfterViewInit, OnChanges {
     gp.selectAll('rect')
       .data(data)
       .join('rect')
-      .attr('x', (d, n, i) => {
-        return (
-          xScale(barChartAxisInstance.axisOutlines[0]?.domains[+n]) +
-          (margin * xScale?.bandwidth()) / 3
-        )
-      })
-      .attr('width', xScale?.bandwidth() / 3)
+      .attr('x', (d, i, n) =>
+        this.onGetBarXScalePosition(
+          xScale(barChartAxisInstance.axisOutlines[0]?.domains[+i]),
+          margin * xScale?.bandwidth(),
+          keyName,
+        ),
+      )
+      .attr('width', this.onGetBarWidth(xScale?.bandwidth(), keyName))
       .attr('fill', this.onGetColorBasedOnOccupancy(keyName))
-      .attr('height', (d, i, n) => this.viewDimConfig?.viewHeight - yScale(0))
-      .attr('y', (d) => yScale(0))
+      .attr('height', (d, i, n) =>
+        this.onGetBarHeight(yScale(0), keyName, false),
+      )
+      .attr('y', (d) => this.onGetBarYScalePosition(yScale(0), 0, keyName))
+      .attr('stroke', '#191919')
+      .attr('stroke-width', 0.1)
+      .attr('rx', 10)
+      .attr('ry', 5)
 
     gp.selectAll('rect')
       .transition()
-      .duration(800)
+      .duration(1500)
       .ease(d3.easePolyInOut)
-      .attr('y', (d, i, n) => yScale(+data[i]?.[keyName]))
-      .attr(
-        'height',
-        (d, i, n) => this.viewDimConfig?.viewHeight - yScale(+data[i][keyName]),
+      .attr('y', (d, i, n) =>
+        this.onGetBarYScalePosition(yScale(+data[i]?.[keyName]), 0, keyName),
       )
-      .delay((d, i) => i * 100)
+      .attr('height', (d, i, n) =>
+        this.onGetBarHeight(yScale(+data[i][keyName]), keyName, true),
+      )
+      .delay((d, i) => i * 50)
+  }
+
+  onGetBarXScalePosition(xScale: number, margin: number, keyName: string) {
+    if (keyName === BarOccupancyEnum.hollow) {
+      return xScale
+    }
+
+    return xScale + margin / 3
+  }
+
+  onGetBarYScalePosition(xScale: number, margin: number, keyName: string) {
+    if (keyName === BarOccupancyEnum.hollow) {
+      return xScale
+    }
+
+    return xScale + margin / 3
+  }
+
+  onGetBarWidth(bandWidth: number, keyName: string, isAnimation = false) {
+    if (keyName === BarOccupancyEnum.hollow) {
+      return bandWidth
+    }
+
+    return bandWidth / 3
+  }
+
+  onGetBarHeight(bandHeight: number, keyName: string, isAnimation = false) {
+    if (keyName === BarOccupancyEnum.hollow) {
+      return isAnimation
+        ? this.viewDimConfig?.viewHeight
+        : this.viewDimConfig?.viewHeight - bandHeight
+    }
+
+    return isAnimation
+      ? this.viewDimConfig?.viewHeight - bandHeight
+      : this.viewDimConfig?.viewHeight - bandHeight
   }
 
   /**
@@ -245,6 +329,8 @@ export class BarchartComponent implements AfterViewInit, OnChanges {
 
       case BarOccupancyEnum.reserved:
         return 'blue'
+      case BarOccupancyEnum.hollow:
+        return '#FFFFFF'
     }
 
     return ''
