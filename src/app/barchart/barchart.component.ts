@@ -1,235 +1,119 @@
 import {
-  AfterContentInit,
   AfterViewInit,
   Component,
   ElementRef,
   Input,
   OnChanges,
-  OnInit,
-  SimpleChanges,
   ViewChild,
 } from '@angular/core'
 import {
   BarChartRenderingType,
-  BarChatOutline,
   BarOccupancyEnum,
   ChartEnumClass,
-  IBarChartAxisInstance,
+  IChartAxisInstance,
   IBarResponse,
   IViewDimConfig,
   d3SelectionBase,
-  ICustomBarDim,
+  BarChatOutline,
 } from '../typings/platfom-typings'
 import * as d3 from 'd3'
-import { ChartsService } from '../charts.service'
 import { WeeklyData } from '../dummy/barchart-data'
 
 import { cloneDeep } from 'lodash'
+import { ChartRendererBaseClass } from '../base-instance-classes/chart-renderer-base.class'
 
 @Component({
   selector: 'app-barchart',
   templateUrl: './barchart.component.html',
   styleUrls: ['./barchart.component.scss'],
 })
-export class BarchartComponent implements AfterViewInit, OnChanges {
+export class BarchartComponent extends ChartRendererBaseClass
+  implements AfterViewInit {
   //  Chart View Height And Width
-  @Input() chartWidth: number = 820
-  @Input() chartHeight: number = 500
+  @Input() inputChartWidth: number = 820
+  @Input() inputChartHeight: number = 500
   @Input() chartRenderingType: BarChartRenderingType
-  @ViewChild('visualization')
-  private chartContainer!: ElementRef<HTMLElement>
+  @ViewChild('visualization') visualization: ElementRef<HTMLElement>
 
-  // config
-  viewDimConfig: IViewDimConfig
-  barChartAxisInstance: IBarChartAxisInstance
-  // SVG main Group
-  viewSVGGroup!: d3SelectionBase
-
-  get getViewDim() {
-    return [
-      this.chartContainer?.nativeElement?.offsetWidth,
-      this.chartContainer?.nativeElement?.offsetHeight,
-    ]
-  }
-
-  get getViewDimConfig() {
-    return this.viewDimConfig
-  }
-
-  constructor(private cs: ChartsService) {}
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (this.chartRenderingType) {
-      this.onRenderChart(this.chartRenderingType)
-    }
+  constructor() {
+    super()
   }
 
   ngAfterViewInit(): void {
-    this.viewDimConfig = this.cs.onConstructViewDimConfig(this.chartContainer)
-    this.viewSVGGroup = this.cs?.onCreateSVGViewGroup(this.viewDimConfig)
-
-    this.onRenderChart(BarChartRenderingType.YEARLY)
-  }
-
-  onRenderChart(renderingType: BarChartRenderingType) {
-    switch (renderingType) {
-      case BarChartRenderingType.MONTHLY:
+      this.init(this.visualization)
+      setTimeout(()=> {
         this.onMonthly()
-        return
-      case BarChartRenderingType.WEEKLY:
-        this.onWeekly()
-        return
-      case BarChartRenderingType.YEARLY:
-        this.onYearly()
-        return
-    }
-  }
-
-  onAxisTextRender(
-    group: d3SelectionBase,
-    xAxisLabel: string,
-    yAxisLabel: string,
-  ) {
-    const xAxisLabelGroup = group
-      ?.append('text')
-      .text(xAxisLabel)
-      .attr('x', this.viewDimConfig?.viewWidth / 2)
-      .attr('y', this.viewDimConfig?.viewHeight + 50)
-      .style('text-anchor', 'middle')
-
-    xAxisLabelGroup?.raise()
-
-    const yAxisLabelGroup = group
-      ?.append('text')
-      .text(yAxisLabel)
-      .attr('x', 0)
-      .attr('y', this.viewDimConfig?.viewHeight / 2)
-      .attr(
-        'transform',
-        `translate(-${this.viewDimConfig?.viewHeight / 2 + 30},${
-          this.viewDimConfig?.viewHeight / 2
-        }) rotate(-90)`,
-      )
-      .style('text-anchor', 'middle')
-      .style('writing-mode', 'sideways-lr')
-
-    yAxisLabelGroup?.raise()
+      },1000)
   }
 
   // on Monthly
   onMonthly() {
     const xDomains = ['week1', 'week2', 'week3', 'week4', 'week5']
 
-    const xRange = [0, this.getViewDimConfig?.viewWidth]
+    const xRange = [0, this.viewDimConfig?.viewWidth]
 
     const yDomains = [0, 100]
-    const yRange = [this.getViewDimConfig?.viewHeight, 0]
-    // Dummy Response
-    const response: Array<IBarResponse> = WeeklyData as any
-    this.onRender(xDomains, xRange, yDomains, yRange, response)
-    this.onAxisTextRender(this.viewSVGGroup, 'Weeks', 'Occupancy percentage')
-  }
+    const yRange = [this.viewDimConfig?.viewHeight, 0]
 
-  // on Yearly
-  onYearly() {
-    const xDomains = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ]
-    const xRange = [0, this.getViewDimConfig?.viewWidth]
+    const axisOutlines = this.onGetGenerateAxisDomainRangeOutlines<
+      string[] | number[]
+    >(xDomains, xRange, yDomains, yRange)
 
-    const yDomains = [0, 100]
-    const yRange = [this.getViewDimConfig?.viewHeight, 0]
-    // Dummy Response
-    const response: Array<IBarResponse> = WeeklyData as any
-    this.onRender(xDomains, xRange, yDomains, yRange, response)
-    this.onAxisTextRender(this.viewSVGGroup, 'Yearly', 'Occupancy percentage')
-  }
 
-  // on Weekly
-  onWeekly() {
-    const xDomains = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
-    const xRange = [0, this.getViewDimConfig?.viewWidth]
+    this.barChartAxisInstance = this.onCreateChartAxis<
+      IViewDimConfig | d3SelectionBase | Array<BarChatOutline<string>>
+    >(this.viewSVGGroup, this.viewDimConfig, axisOutlines)
 
-    const yDomains = [0, 100]
-    const yRange = [this.getViewDimConfig?.viewHeight, 0]
-    // Dummy Response
-    const response: Array<IBarResponse> = WeeklyData as any
-    this.onRender(xDomains, xRange, yDomains, yRange, response)
-    this.onAxisTextRender(this.viewSVGGroup, 'Weekly', 'Occupancy percentage')
-  }
-
-  onRender(
-    xdomains: Array<string | number>,
-    xRange: Array<number>,
-    yDomains: Array<string | number>,
-    yRange: Array<number>,
-    data: Array<IBarResponse>,
-  ) {
-    // Clean the View Group and Render all bars
-    this.viewSVGGroup?.selectAll(`*`)?.remove()
-
-    const xAxisOutline: BarChatOutline<any> = {
-      ticksIndices: [0, 1, 2, 3, 4],
-      values: [],
-      domains: xdomains,
-      ranges: xRange,
-    }
-
-    const yAxisOutline: BarChatOutline<any> = {
-      ticksIndices: [0, 1, 2, 3, 4, 5, 6],
-      values: [],
-      domains: yDomains,
-      ranges: yRange,
-    }
-
-    const axisOutlines = [xAxisOutline, yAxisOutline]
-
-    this.barChartAxisInstance = this.cs.onCreateBarChartAxis(
+    this.onRender()
+    this.onAxisTextRender<d3SelectionBase | string>(
       this.viewSVGGroup,
-      this.viewDimConfig,
-      axisOutlines,
+      'Weeks',
+      'Occupancy percentage',
     )
+  }
 
-    // Remove and render
+  onRender() {
+    const response: Array<IBarResponse> = WeeklyData as any
     this.onRenderOccupancyBarChart(
       cloneDeep(this.barChartAxisInstance),
-      cloneDeep(data),
+      cloneDeep(response),
+      'hollow',
+      -70,
+    )
+     this.onRenderOccupancyBarChart(
+      cloneDeep(this.barChartAxisInstance),
+      cloneDeep(response),
       'hollow',
       0,
     )
+     this.onRenderOccupancyBarChart(
+      cloneDeep(this.barChartAxisInstance),
+      cloneDeep(response),
+      'hollow',
+      70,
+    )
     this.onRenderOccupancyBarChart(
       cloneDeep(this.barChartAxisInstance),
-      cloneDeep(data),
+      cloneDeep(response),
       'occupied',
+      -70,
+    )
+    this.onRenderOccupancyBarChart(
+      cloneDeep(this.barChartAxisInstance),
+      cloneDeep(response),
+      'available',
       0,
     )
     this.onRenderOccupancyBarChart(
       cloneDeep(this.barChartAxisInstance),
-      cloneDeep(data),
-      'available',
-      1,
-    )
-    this.onRenderOccupancyBarChart(
-      cloneDeep(this.barChartAxisInstance),
-      cloneDeep(data),
+      cloneDeep(response),
       'spillOver',
-      2,
+      70,
     )
   }
 
   onRenderOccupancyBarChart(
-    barChartAxisInstance: IBarChartAxisInstance,
+    barChartAxisInstance: IChartAxisInstance,
     data: any,
     keyName: string,
     margin: number,
@@ -247,7 +131,7 @@ export class BarchartComponent implements AfterViewInit, OnChanges {
       .attr('x', (d, i, n) =>
         this.onGetBarXScalePosition(
           xScale(barChartAxisInstance.axisOutlines[0]?.domains[+i]),
-          margin * xScale?.bandwidth(),
+          xScale?.bandwidth() + (xScale?.bandwidth() / 3)  + margin,
           keyName,
         ),
       )
@@ -257,10 +141,9 @@ export class BarchartComponent implements AfterViewInit, OnChanges {
         this.onGetBarHeight(yScale(0), keyName, false),
       )
       .attr('y', (d) => this.onGetBarYScalePosition(yScale(0), 0, keyName))
-      .attr('stroke', '#191919')
-      .attr('stroke-width', 0.1)
-      .attr('rx', 10)
-      .attr('ry', 5)
+      // .attr('stroke', '#191919')
+      // .attr('stroke-width', 0.05)
+      // .attr('rx',5)
 
     gp.selectAll('rect')
       .transition()
@@ -276,9 +159,6 @@ export class BarchartComponent implements AfterViewInit, OnChanges {
   }
 
   onGetBarXScalePosition(xScale: number, margin: number, keyName: string) {
-    if (keyName === BarOccupancyEnum.hollow) {
-      return xScale
-    }
 
     return xScale + margin / 3
   }
@@ -292,11 +172,7 @@ export class BarchartComponent implements AfterViewInit, OnChanges {
   }
 
   onGetBarWidth(bandWidth: number, keyName: string, isAnimation = false) {
-    if (keyName === BarOccupancyEnum.hollow) {
-      return bandWidth
-    }
-
-    return bandWidth / 3
+     return 20
   }
 
   onGetBarHeight(bandHeight: number, keyName: string, isAnimation = false) {
@@ -319,18 +195,18 @@ export class BarchartComponent implements AfterViewInit, OnChanges {
   onGetColorBasedOnOccupancy(keyName: string): string {
     switch (keyName) {
       case BarOccupancyEnum.spillOver:
-        return '#F55C1E'
+        return '#F78D8D'
 
       case BarOccupancyEnum.available:
-        return '#191919'
+        return '#909090'
 
       case BarOccupancyEnum.occupied:
-        return '#7BF403'
+        return '#92D04E'
 
       case BarOccupancyEnum.reserved:
         return 'blue'
       case BarOccupancyEnum.hollow:
-        return '#FFFFFF'
+        return '#f1f1f1'
     }
 
     return ''

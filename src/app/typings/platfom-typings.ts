@@ -12,11 +12,11 @@ interface AxisOutline<T> {
   ticksIndices: Array<number>
   values: Array<T | null>
   domains: Array<T>
-  ranges: Array<number>
+  ranges: Array<number | string>
 }
 export type BarChatOutline<T> = AxisOutline<T>
 
-export interface IBarChartAxisInstance {
+export interface IChartAxisInstance {
   xScale:   d3.ScaleBand<any> |d3.ScaleLinear<any, any, never>
   yScale: d3.ScaleLinear<any, any, never> | d3.ScaleBand<any>
   viewGroup: d3SelectionBase

@@ -5,38 +5,30 @@ import {
   Input,
   ViewChild,
 } from '@angular/core'
-import { ChartsService } from '../charts.service'
-import { d3SelectionBase, IViewDimConfig } from '../typings/platfom-typings'
+import { ChartRendererBaseClass } from '../base-instance-classes/chart-renderer-base.class'
+
 
 @Component({
   selector: 'app-lines-chart',
   templateUrl: './lines-chart.component.html',
   styleUrls: ['./lines-chart.component.scss'],
 })
-export class LinesChartComponent implements AfterViewInit {
-  //  Chart View Height And Width
-  @Input() chartWidth: number = 820
-  @Input() chartHeight: number = 500
-  @ViewChild('visualization')
-  private chartContainer!: ElementRef<HTMLElement>
+export class LinesChartComponent extends ChartRendererBaseClass implements AfterViewInit {
 
-  viewDimConfig: IViewDimConfig
-  viewSVGGroup!: d3SelectionBase
+   @Input() inputChartWidth: number = 820
+   @Input() inputChartHeight: number = 500
+   @ViewChild('visualization') visualization: ElementRef<HTMLElement>
 
-  get getViewDim() {
-    return [
-      this.chartContainer?.nativeElement?.offsetWidth,
-      this.chartContainer?.nativeElement?.offsetHeight,
-    ]
-  }
 
-  get getViewDimConfig() {
-    return this.viewDimConfig
-  }
+   constructor(){
+     super()
+   }
 
-  constructor(private cs: ChartsService) {}
-  ngAfterViewInit(): void {
-    this.viewDimConfig = this.cs.onConstructViewDimConfig(this.chartContainer)
-    this.viewSVGGroup = this.cs?.onCreateSVGViewGroup(this.viewDimConfig)
+   ngAfterViewInit(): void {
+     this.init(this.visualization)
+   }
+
+  onRender(): void {
+    console.log('Hello World')
   }
 }

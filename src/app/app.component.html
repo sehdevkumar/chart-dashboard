@@ -7,16 +7,14 @@
   class="container-fluid mt-4"
   style="
     display: grid;
-    grid-template-columns: repeat(1, minmax(0,1fr));
+    grid-template-columns: repeat(2, minmax(0,1fr));
     height: 100%;
     width: 100%;
     overflow: hidden;
   "
 >
-  <app-barchart [chartRenderingType]="changeFlag" [chartHeight]="300" [chartWidth]="620"></app-barchart>
-  <!-- <app-barchart [chartRenderingType]="type.WEEKLY"></app-barchart> -->
-  <!-- <app-barchart [chartRenderingType]="type.MONTHLY"></app-barchart> -->
-
-  <app-line-chart></app-line-chart>
+  <app-barchart [chartRenderingType]="changeFlag" [inputChartWidth]="700" [inputChartHeight]="350"></app-barchart>
+ <!-- <app-lines-chart  [inputChartWidth]="700" [inputChartHeight]="320"></app-lines-chart> -->
+ <app-containers-analysis-chart [inputChartWidth]="700" [inputChartHeight]="350"></app-containers-analysis-chart>
 
 </div>
