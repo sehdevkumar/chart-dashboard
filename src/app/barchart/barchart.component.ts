@@ -1,4 +1,5 @@
 import {
+  AfterContentInit,
   AfterViewInit,
   Component,
   ElementRef,
@@ -28,7 +29,7 @@ import { ChartRendererBaseClass } from '../base-instance-classes/chart-renderer-
   styleUrls: ['./barchart.component.scss'],
 })
 export class BarchartComponent extends ChartRendererBaseClass
-  implements AfterViewInit {
+  implements AfterViewInit  , AfterContentInit {
   //  Chart View Height And Width
   @Input() inputChartWidth: number = 820
   @Input() inputChartHeight: number = 500
@@ -38,12 +39,12 @@ export class BarchartComponent extends ChartRendererBaseClass
   constructor() {
     super()
   }
+  ngAfterContentInit(): void {
+  }
 
   ngAfterViewInit(): void {
-      this.init(this.visualization)
-      setTimeout(()=> {
-        this.onMonthly()
-      },1000)
+    this.init(this.visualization)
+    this.onMonthly()
   }
 
   // on Monthly

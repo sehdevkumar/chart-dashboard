@@ -35,7 +35,6 @@ export abstract class ChartRendererBaseClass implements IChartRendererBase {
   init(
     chartContainer?: ElementRef<HTMLElement>,
   ) {
-
     this.chartContainer = chartContainer
     this.viewDimConfig = this.onConstructViewDimConfig(this.chartContainer)
     this.viewSVGGroup = this.onCreateSVGViewGroup(this.viewDimConfig)
@@ -171,6 +170,7 @@ export abstract class ChartRendererBaseClass implements IChartRendererBase {
   onConstructViewDimConfig(
     chartContainer: ElementRef<HTMLElement>,
   ): IViewDimConfig {
+    debugger
     const rendererHeight = chartContainer?.nativeElement?.offsetHeight
     const rendererWidth = chartContainer?.nativeElement?.offsetWidth
 
