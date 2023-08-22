@@ -1,2 +1,22 @@
 /* You can add global styles to this file, and also import other style files */
-@import './assets/scss/reset';
+@import "./assets/scss/reset";
+.legend-tool-tip {
+  position: absolute;
+  width: 200px;
+  height: 50px;
+  background-color: rgba(249, 249, 249, 1);
+  box-shadow: 9px 4px 5px 0px rgba(68, 68, 68, 0.24);
+  border-radius: 8px;
+  display: none;
+  pointer-events: none;
+  &::after {
+    content: "";
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    left: -9px;
+    background-color: rgba(249, 249, 249, 1);
+    top: 10px;
+    transform: rotate3d(0, 0, 1, 312deg);
+  }
+}

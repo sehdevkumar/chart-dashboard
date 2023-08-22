@@ -170,7 +170,6 @@ export abstract class ChartRendererBaseClass implements IChartRendererBase {
   onConstructViewDimConfig(
     chartContainer: ElementRef<HTMLElement>,
   ): IViewDimConfig {
-    debugger
     const rendererHeight = chartContainer?.nativeElement?.offsetHeight
     const rendererWidth = chartContainer?.nativeElement?.offsetWidth
 

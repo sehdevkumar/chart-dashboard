@@ -12,7 +12,7 @@ import {
   BarOccupancyEnum,
   ChartEnumClass,
   IChartAxisInstance,
-  IBarResponse,
+  ICellsOccupancyResponse,
   IViewDimConfig,
   d3SelectionBase,
   BarChatOutline,
@@ -29,7 +29,7 @@ import { ChartRendererBaseClass } from '../base-instance-classes/chart-renderer-
   styleUrls: ['./barchart.component.scss'],
 })
 export class BarchartComponent extends ChartRendererBaseClass
-  implements AfterViewInit  , AfterContentInit {
+  implements AfterViewInit, AfterContentInit {
   //  Chart View Height And Width
   @Input() inputChartWidth: number = 820
   @Input() inputChartHeight: number = 500
@@ -39,8 +39,7 @@ export class BarchartComponent extends ChartRendererBaseClass
   constructor() {
     super()
   }
-  ngAfterContentInit(): void {
-  }
+  ngAfterContentInit(): void {}
 
   ngAfterViewInit(): void {
     this.init(this.visualization)
@@ -60,7 +59,6 @@ export class BarchartComponent extends ChartRendererBaseClass
       string[] | number[]
     >(xDomains, xRange, yDomains, yRange)
 
-
     this.barChartAxisInstance = this.onCreateChartAxis<
       IViewDimConfig | d3SelectionBase | Array<BarChatOutline<string>>
     >(this.viewSVGGroup, this.viewDimConfig, axisOutlines)
@@ -74,65 +72,39 @@ export class BarchartComponent extends ChartRendererBaseClass
   }
 
   onRender() {
-    const response: Array<IBarResponse> = WeeklyData as any
-    this.onRenderOccupancyBarChart(
-      cloneDeep(this.barChartAxisInstance),
-      cloneDeep(response),
-      'hollow',
-      -70,
-    )
-     this.onRenderOccupancyBarChart(
-      cloneDeep(this.barChartAxisInstance),
-      cloneDeep(response),
-      'hollow',
-      0,
-    )
-     this.onRenderOccupancyBarChart(
-      cloneDeep(this.barChartAxisInstance),
-      cloneDeep(response),
-      'hollow',
-      70,
-    )
-    this.onRenderOccupancyBarChart(
-      cloneDeep(this.barChartAxisInstance),
-      cloneDeep(response),
-      'occupied',
-      -70,
-    )
-    this.onRenderOccupancyBarChart(
-      cloneDeep(this.barChartAxisInstance),
-      cloneDeep(response),
-      'available',
-      0,
-    )
-    this.onRenderOccupancyBarChart(
-      cloneDeep(this.barChartAxisInstance),
-      cloneDeep(response),
-      'spillOver',
-      70,
-    )
+    const response: Array<ICellsOccupancyResponse> = WeeklyData as any
+    // TODO: this is just dumay data later it will change
+
+    const gp = this.barChartAxisInstance?.viewGroup
+      .append('g')
+      .attr('class', `${ChartEnumClass.BAR_CHART_CLASS}`)
+
+    response?.forEach((data, index) => {
+      this.onRenderOccupancyBarChart(gp, data, index, 'hollow', -65)
+      this.onRenderOccupancyBarChart(gp, data, index, 'hollow', 0)
+      this.onRenderOccupancyBarChart(gp, data, index, 'hollow', 65)
+      this.onRenderOccupancyBarChart(gp, data, index, 'spillOver', -65)
+      this.onRenderOccupancyBarChart(gp, data, index, 'available', 0)
+      this.onRenderOccupancyBarChart(gp, data, index, 'occupied', 65)
+    })
   }
 
   onRenderOccupancyBarChart(
-    barChartAxisInstance: IChartAxisInstance,
-    data: any,
-    keyName: string,
-    margin: number,
+    group: d3SelectionBase,
+    data: ICellsOccupancyResponse,
+    index?: number,
+    keyName?: string,
+    margin?: number,
   ) {
-    // TODO: this is just dumay data later it will change
-    const xScale = barChartAxisInstance?.xScale as d3.ScaleBand<any>
-    const yScale = barChartAxisInstance?.yScale
+    const xScale = this.barChartAxisInstance?.xScale as d3.ScaleBand<any>
+    const yScale = this.barChartAxisInstance?.yScale
+    const bar = group.append('rect')
 
-    const gp = barChartAxisInstance?.viewGroup
-      .append('g')
-      .attr('class', `${ChartEnumClass.BAR_CHART_CLASS}`)
-    gp.selectAll('rect')
-      .data(data)
-      .join('rect')
+    bar
       .attr('x', (d, i, n) =>
         this.onGetBarXScalePosition(
-          xScale(barChartAxisInstance.axisOutlines[0]?.domains[+i]),
-          xScale?.bandwidth() + (xScale?.bandwidth() / 3)  + margin,
+          xScale(this.barChartAxisInstance.axisOutlines[0]?.domains[+index]),
+          xScale?.bandwidth() + xScale?.bandwidth() / 3 + margin,
           keyName,
         ),
       )
@@ -142,25 +114,107 @@ export class BarchartComponent extends ChartRendererBaseClass
         this.onGetBarHeight(yScale(0), keyName, false),
       )
       .attr('y', (d) => this.onGetBarYScalePosition(yScale(0), 0, keyName))
-      // .attr('stroke', '#191919')
-      // .attr('stroke-width', 0.05)
-      // .attr('rx',5)
 
-    gp.selectAll('rect')
+    bar
       .transition()
       .duration(1500)
-      .ease(d3.easePolyInOut)
+      .ease(d3.easeExpInOut)
       .attr('y', (d, i, n) =>
-        this.onGetBarYScalePosition(yScale(+data[i]?.[keyName]), 0, keyName),
+        this.onGetBarYScalePosition(yScale(+data?.[keyName]), 0, keyName),
       )
       .attr('height', (d, i, n) =>
-        this.onGetBarHeight(yScale(+data[i][keyName]), keyName, true),
+        this.onGetBarHeight(yScale(+data[keyName]), keyName, true),
       )
       .delay((d, i) => i * 50)
   }
 
-  onGetBarXScalePosition(xScale: number, margin: number, keyName: string) {
+  // onRender() {
+  //   const response: Array<ICellsOccupancyResponse> = WeeklyData as any
+  //   this.onRenderOccupancyBarChart(
+  //     cloneDeep(this.barChartAxisInstance),
+  //     cloneDeep(response),
+  //     'hollow',
+  //     -70,
+  //   )
+  //    this.onRenderOccupancyBarChart(
+  //     cloneDeep(this.barChartAxisInstance),
+  //     cloneDeep(response),
+  //     'hollow',
+  //     0,
+  //   )
+  //    this.onRenderOccupancyBarChart(
+  //     cloneDeep(this.barChartAxisInstance),
+  //     cloneDeep(response),
+  //     'hollow',
+  //     70,
+  //   )
+  //   this.onRenderOccupancyBarChart(
+  //     cloneDeep(this.barChartAxisInstance),
+  //     cloneDeep(response),
+  //     'occupied',
+  //     -70,
+  //   )
+  //   this.onRenderOccupancyBarChart(
+  //     cloneDeep(this.barChartAxisInstance),
+  //     cloneDeep(response),
+  //     'available',
+  //     0,
+  //   )
+  //   this.onRenderOccupancyBarChart(
+  //     cloneDeep(this.barChartAxisInstance),
+  //     cloneDeep(response),
+  //     'spillOver',
+  //     70,
+  //   )
+  // }
 
+  // onRenderOccupancyBarChart(
+  //   barChartAxisInstance: IChartAxisInstance,
+  //   data: any,
+  //   keyName: string,
+  //   margin: number,
+  // ) {
+  //   // TODO: this is just dumay data later it will change
+  //   const xScale = barChartAxisInstance?.xScale as d3.ScaleBand<any>
+  //   const yScale = barChartAxisInstance?.yScale
+
+  //   const gp = barChartAxisInstance?.viewGroup
+  //     .append('g')
+  //     .attr('class', `${ChartEnumClass.BAR_CHART_CLASS}`)
+  //   gp.selectAll('rect')
+  //     .data(data)
+  //     .join('rect')
+  //     .attr('x', (d, i, n) =>
+  //       this.onGetBarXScalePosition(
+  //         xScale(barChartAxisInstance.axisOutlines[0]?.domains[+i]),
+  //         xScale?.bandwidth() + (xScale?.bandwidth() / 3)  + margin,
+  //         keyName,
+  //       ),
+  //     )
+  //     .attr('width', this.onGetBarWidth(xScale?.bandwidth(), keyName))
+  //     .attr('fill', this.onGetColorBasedOnOccupancy(keyName))
+  //     .attr('height', (d, i, n) =>
+  //       this.onGetBarHeight(yScale(0), keyName, false),
+  //     )
+  //     .attr('y', (d) => this.onGetBarYScalePosition(yScale(0), 0, keyName))
+  //     // .attr('stroke', '#191919')
+  //     // .attr('stroke-width', 0.05)
+  //     // .attr('rx',5)
+
+  //   gp.selectAll('rect')
+  //     .transition()
+  //     .duration(1500)
+  //     .ease(d3.easePolyInOut)
+  //     .attr('y', (d, i, n) =>
+  //       this.onGetBarYScalePosition(yScale(+data[i]?.[keyName]), 0, keyName),
+  //     )
+  //     .attr('height', (d, i, n) =>
+  //       this.onGetBarHeight(yScale(+data[i][keyName]), keyName, true),
+  //     )
+  //     .delay((d, i) => i * 50)
+  // }
+
+  onGetBarXScalePosition(xScale: number, margin: number, keyName: string) {
     return xScale + margin / 3
   }
 
@@ -173,7 +227,7 @@ export class BarchartComponent extends ChartRendererBaseClass
   }
 
   onGetBarWidth(bandWidth: number, keyName: string, isAnimation = false) {
-     return 20
+    return 20
   }
 
   onGetBarHeight(bandHeight: number, keyName: string, isAnimation = false) {

@@ -17,20 +17,25 @@ interface AxisOutline<T> {
 export type BarChatOutline<T> = AxisOutline<T>
 
 export interface IChartAxisInstance {
-  xScale:   d3.ScaleBand<any> |d3.ScaleLinear<any, any, never>
+  xScale: d3.ScaleBand<any> | d3.ScaleLinear<any, any, never>
   yScale: d3.ScaleLinear<any, any, never> | d3.ScaleBand<any>
   viewGroup: d3SelectionBase
   viewDimConfig: IViewDimConfig
   axisOutlines: BarChatOutline<any>[]
 }
 
-
 // Just Dummay Interface
-export interface IBarResponse {
+export interface ICellsOccupancyResponse {
   spillOver?: string
   available?: string
   occupied?: string
   reserved?: string
+}
+
+export interface IContainersResosponse {
+  container_20_fit:number;
+  container_40_fit:number;
+  id: string
 }
 
 export enum BarOccupancyEnum {
@@ -38,7 +43,9 @@ export enum BarOccupancyEnum {
   available = 'available',
   occupied = 'occupied',
   reserved = 'reserved',
-  hollow = 'hollow'
+  container_40_fit='container_40_fit',
+   container_20_fit='container_20_fit',
+  hollow = 'hollow',
 }
 
 export interface IViewDimConfig {
@@ -55,18 +62,16 @@ export interface ICustomBarDim {
   right: number
   bottom: number
   left: number
-  height?:number;
-  width?:number;
+  height?: number
+  width?: number
 }
-
 
 export enum ChartEnumClass {
-   BAR_CHART_CLASS='bar-chart-class'
+  BAR_CHART_CLASS = 'bar-chart-class',
 }
 
-
 export enum BarChartRenderingType {
-   MONTHLY='MONTHLY',
-   WEEKLY='WEEKLY',
-   YEARLY='YEARLY'
+  MONTHLY = 'MONTHLY',
+  WEEKLY = 'WEEKLY',
+  YEARLY = 'YEARLY',
 }
