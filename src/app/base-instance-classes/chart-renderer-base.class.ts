@@ -5,13 +5,15 @@ import {
   IChartAxisInstance,
   d3SelectionBase,
   BarChatOutline,
+  BarOccupancyEnum,
 } from '../typings/platfom-typings'
 import * as d3 from 'd3'
+import { ChartEventRegisterClass } from './chart-generic-event-register.class'
 
 /**
  * Base abstract class for chart rendering.
  */
-export abstract class ChartRendererBaseClass implements IChartRendererBase {
+export abstract class ChartRendererBaseClass extends ChartEventRegisterClass implements IChartRendererBase {
   /** Width of the chart. */
   chartWidth: number
 
@@ -30,7 +32,13 @@ export abstract class ChartRendererBaseClass implements IChartRendererBase {
   /** Reference to the SVG group element that contains the chart's view. */
    viewSVGGroup: d3SelectionBase
 
+   GlobalBarOccupancyEnum = BarOccupancyEnum
+
   abstract onRender(): void
+
+  constructor() {
+    super()
+  }
 
   init(
     chartContainer?: ElementRef<HTMLElement>,
@@ -40,11 +48,17 @@ export abstract class ChartRendererBaseClass implements IChartRendererBase {
     this.viewSVGGroup = this.onCreateSVGViewGroup(this.viewDimConfig)
   }
 
+
+  onDrawChartLegends<T>(...args: T[]): void {
+
+  }
+
+
   /**
    * Callback function for rendering axis text.
    * @param args - Additional arguments for the callback.
    */
-  onAxisTextRender?<T>(...args: T[]): void {
+  onAxisTextRender<T>(...args: T[]): void {
     const [group, xAxisLabel, yAxisLabel] = (args as unknown) as [
       d3SelectionBase,
       string,
@@ -67,7 +81,7 @@ export abstract class ChartRendererBaseClass implements IChartRendererBase {
       .attr('y', this.viewDimConfig?.viewHeight / 2)
       .attr(
         'transform',
-        `translate(-${this.viewDimConfig?.viewHeight / 2 + 30},${
+        `translate(-${this.viewDimConfig?.viewHeight / 2 + 40},${
           this.viewDimConfig?.viewHeight / 2
         }) rotate(-90)`,
       )

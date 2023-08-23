@@ -2,21 +2,49 @@
 @import "./assets/scss/reset";
 .legend-tool-tip {
   position: absolute;
-  width: 200px;
-  height: 50px;
+  min-width: 150px;
+  min-height: 30px;
   background-color: rgba(249, 249, 249, 1);
   box-shadow: 9px 4px 5px 0px rgba(68, 68, 68, 0.24);
   border-radius: 8px;
-  display: none;
+  // display: none;
   pointer-events: none;
+
+  .legend__container {
+    display: flex;
+    justify-content: flex-start;
+    justify-content: center;
+    flex-direction: column;
+    position: relative;
+    z-index: 2;
+    .legend__body {
+       display: flex;
+       align-items: center;
+       gap: .5rem;
+       padding-left: .5rem;
+      .legend__text {
+        font-size: 100%;
+      }
+
+       .legend__mark {
+        display: block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: aqua;
+      }
+    }
+
+  }
+
   &::after {
     content: "";
-    width: 20px;
-    height: 20px;
+    width: 15px;
+    height: 15px;
     position: absolute;
-    left: -9px;
+    left: -5px;
     background-color: rgba(249, 249, 249, 1);
-    top: 10px;
+    top: 5px;
     transform: rotate3d(0, 0, 1, 312deg);
   }
 }

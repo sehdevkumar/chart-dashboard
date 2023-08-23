@@ -9,6 +9,7 @@ import { ChartsService } from './charts.service';
 import { LineChartComponent } from './line-chart/line-chart.component';
 import { LinesChartComponent } from './lines-chart/lines-chart.component';
 import { ContainersAnalysisChartComponent } from './containers-analysis-chart/containers-analysis-chart.component';
+import { ChartTooltipComponent } from './chart-tooltip/chart-tooltip.component';
 
 @NgModule({
   declarations: [
@@ -17,7 +18,8 @@ import { ContainersAnalysisChartComponent } from './containers-analysis-chart/co
     LandingPageComponent,
     LineChartComponent,
     LinesChartComponent,
-    ContainersAnalysisChartComponent
+    ContainersAnalysisChartComponent,
+    ChartTooltipComponent
   ],
   imports: [
     BrowserModule,

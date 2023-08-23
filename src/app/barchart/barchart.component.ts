@@ -5,6 +5,7 @@ import {
   ElementRef,
   Input,
   OnChanges,
+  OnInit,
   ViewChild,
 } from '@angular/core'
 import {
@@ -16,12 +17,15 @@ import {
   IViewDimConfig,
   d3SelectionBase,
   BarChatOutline,
+  IChartToolTip,
 } from '../typings/platfom-typings'
 import * as d3 from 'd3'
 import { WeeklyData } from '../dummy/barchart-data'
 
 import { cloneDeep } from 'lodash'
 import { ChartRendererBaseClass } from '../base-instance-classes/chart-renderer-base.class'
+import { IChartGenericEventEnum } from '../typings/chart-base-typings'
+import { debounceTime } from 'rxjs'
 
 @Component({
   selector: 'app-barchart',
@@ -29,17 +33,46 @@ import { ChartRendererBaseClass } from '../base-instance-classes/chart-renderer-
   styleUrls: ['./barchart.component.scss'],
 })
 export class BarchartComponent extends ChartRendererBaseClass
-  implements AfterViewInit, AfterContentInit {
+  implements AfterViewInit, OnInit {
   //  Chart View Height And Width
   @Input() inputChartWidth: number = 820
   @Input() inputChartHeight: number = 500
   @Input() chartRenderingType: BarChartRenderingType
   @ViewChild('visualization') visualization: ElementRef<HTMLElement>
+  @ViewChild('charToolTip') charToolTip: ElementRef
+
+  IChartToolTip:IChartToolTip[]
 
   constructor() {
     super()
   }
-  ngAfterContentInit(): void {}
+
+  ngOnInit(): void {
+    this.GenericEventRaised$.pipe(debounceTime(100)).subscribe((res) => {
+      if (res?.event === IChartGenericEventEnum.MOUSE_MOVE) {
+        this.onGetGenerateChartToolTipData(res?.data)
+        this.onToolTipRegister(this.charToolTip,null, res?.mouseEvent)
+      } else if (res?.event === IChartGenericEventEnum.MOUSE_OUT) {
+        this.IChartToolTip = []
+        this.onToolTipRegister(this.charToolTip,null, null)
+      }
+    })
+  }
+
+
+  onGetGenerateChartToolTipData(data:ICellsOccupancyResponse) {
+    console.log(data)
+     this.IChartToolTip = []
+    const container_40_fit: IChartToolTip = {
+      markColor: this.onGetColorBasedOnOccupancy(
+        data['datum'],
+      ),
+      value: data['datum'],
+    }
+
+
+    this.IChartToolTip.push(container_40_fit)
+  }
 
   ngAfterViewInit(): void {
     this.init(this.visualization)
@@ -98,7 +131,7 @@ export class BarchartComponent extends ChartRendererBaseClass
   ) {
     const xScale = this.barChartAxisInstance?.xScale as d3.ScaleBand<any>
     const yScale = this.barChartAxisInstance?.yScale
-    const bar = group.append('rect')
+    const bar = group.append('rect').datum(keyName)
 
     bar
       .attr('x', (d, i, n) =>
@@ -115,6 +148,9 @@ export class BarchartComponent extends ChartRendererBaseClass
       )
       .attr('y', (d) => this.onGetBarYScalePosition(yScale(0), 0, keyName))
 
+      this.onRegisterEvent(bar, IChartGenericEventEnum.MOUSE_MOVE, data,keyName)
+      this.onRegisterEvent(bar, IChartGenericEventEnum.MOUSE_OUT,  data,keyName)
+
     bar
       .transition()
       .duration(1500)
@@ -126,93 +162,10 @@ export class BarchartComponent extends ChartRendererBaseClass
         this.onGetBarHeight(yScale(+data[keyName]), keyName, true),
       )
       .delay((d, i) => i * 50)
+
+
+
   }
-
-  // onRender() {
-  //   const response: Array<ICellsOccupancyResponse> = WeeklyData as any
-  //   this.onRenderOccupancyBarChart(
-  //     cloneDeep(this.barChartAxisInstance),
-  //     cloneDeep(response),
-  //     'hollow',
-  //     -70,
-  //   )
-  //    this.onRenderOccupancyBarChart(
-  //     cloneDeep(this.barChartAxisInstance),
-  //     cloneDeep(response),
-  //     'hollow',
-  //     0,
-  //   )
-  //    this.onRenderOccupancyBarChart(
-  //     cloneDeep(this.barChartAxisInstance),
-  //     cloneDeep(response),
-  //     'hollow',
-  //     70,
-  //   )
-  //   this.onRenderOccupancyBarChart(
-  //     cloneDeep(this.barChartAxisInstance),
-  //     cloneDeep(response),
-  //     'occupied',
-  //     -70,
-  //   )
-  //   this.onRenderOccupancyBarChart(
-  //     cloneDeep(this.barChartAxisInstance),
-  //     cloneDeep(response),
-  //     'available',
-  //     0,
-  //   )
-  //   this.onRenderOccupancyBarChart(
-  //     cloneDeep(this.barChartAxisInstance),
-  //     cloneDeep(response),
-  //     'spillOver',
-  //     70,
-  //   )
-  // }
-
-  // onRenderOccupancyBarChart(
-  //   barChartAxisInstance: IChartAxisInstance,
-  //   data: any,
-  //   keyName: string,
-  //   margin: number,
-  // ) {
-  //   // TODO: this is just dumay data later it will change
-  //   const xScale = barChartAxisInstance?.xScale as d3.ScaleBand<any>
-  //   const yScale = barChartAxisInstance?.yScale
-
-  //   const gp = barChartAxisInstance?.viewGroup
-  //     .append('g')
-  //     .attr('class', `${ChartEnumClass.BAR_CHART_CLASS}`)
-  //   gp.selectAll('rect')
-  //     .data(data)
-  //     .join('rect')
-  //     .attr('x', (d, i, n) =>
-  //       this.onGetBarXScalePosition(
-  //         xScale(barChartAxisInstance.axisOutlines[0]?.domains[+i]),
-  //         xScale?.bandwidth() + (xScale?.bandwidth() / 3)  + margin,
-  //         keyName,
-  //       ),
-  //     )
-  //     .attr('width', this.onGetBarWidth(xScale?.bandwidth(), keyName))
-  //     .attr('fill', this.onGetColorBasedOnOccupancy(keyName))
-  //     .attr('height', (d, i, n) =>
-  //       this.onGetBarHeight(yScale(0), keyName, false),
-  //     )
-  //     .attr('y', (d) => this.onGetBarYScalePosition(yScale(0), 0, keyName))
-  //     // .attr('stroke', '#191919')
-  //     // .attr('stroke-width', 0.05)
-  //     // .attr('rx',5)
-
-  //   gp.selectAll('rect')
-  //     .transition()
-  //     .duration(1500)
-  //     .ease(d3.easePolyInOut)
-  //     .attr('y', (d, i, n) =>
-  //       this.onGetBarYScalePosition(yScale(+data[i]?.[keyName]), 0, keyName),
-  //     )
-  //     .attr('height', (d, i, n) =>
-  //       this.onGetBarHeight(yScale(+data[i][keyName]), keyName, true),
-  //     )
-  //     .delay((d, i) => i * 50)
-  // }
 
   onGetBarXScalePosition(xScale: number, margin: number, keyName: string) {
     return xScale + margin / 3

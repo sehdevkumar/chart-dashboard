@@ -75,3 +75,9 @@ export enum BarChartRenderingType {
   WEEKLY = 'WEEKLY',
   YEARLY = 'YEARLY',
 }
+
+
+export interface IChartToolTip{
+   markColor:string;
+   value:string;
+}

@@ -1,0 +1,12 @@
+  <div class="legend-tool-tip">
+    <div class="legend__container">
+      <ng-container *ngFor="let mark of IChartToolTip">
+        <div class="legend__body">
+          <span class="legend__mark" [style.background]="mark?.markColor"></span>
+          <span class="legend__text">
+             {{ mark?.value }} <span style="opacity: 0.5;"></span>
+          </span>
+        </div>
+      </ng-container>
+    </div>
+  </div>

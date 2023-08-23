@@ -1,4 +1,9 @@
-
-<div class="shadow-lg p-3 mb-5 bg-body rounded p-2"  style="border: 1px solid #d8d8d8;height: 400px;" #visualization></div>
-<div class="legend-tool-tip">
+<div
+  class="shadow-lg p-3 mb-5 bg-body rounded p-2"
+  style="border: 1px solid #d8d8d8; height: 400px;"
+  #visualization
+>
+ <div  #charToolTip style="display: none;">
+    <app-chart-tooltip [IChartToolTip]="IChartToolTip"></app-chart-tooltip>
+  </div>
 </div>

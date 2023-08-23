@@ -3,23 +3,23 @@ import {
   Component,
   ElementRef,
   Input,
+  OnInit,
   ViewChild,
 } from '@angular/core'
 import { ChartRendererBaseClass } from '../base-instance-classes/chart-renderer-base.class'
 import * as d3 from 'd3'
-import { cloneDeep } from 'lodash'
-import { WeeklyData } from '../dummy/barchart-data'
 import {
   IViewDimConfig,
   d3SelectionBase,
   BarChatOutline,
-  ICellsOccupancyResponse,
-  IChartAxisInstance,
   ChartEnumClass,
   BarOccupancyEnum,
   IContainersResosponse,
+  IChartToolTip,
 } from '../typings/platfom-typings'
 import { ContainerChart } from '../dummy/containers-data'
+import { IChartGenericEventEnum } from '../typings/chart-base-typings'
+import { debounceTime } from 'rxjs/operators'
 
 @Component({
   selector: 'app-containers-analysis-chart',
@@ -27,15 +27,51 @@ import { ContainerChart } from '../dummy/containers-data'
   styleUrls: ['./containers-analysis-chart.component.scss'],
 })
 export class ContainersAnalysisChartComponent extends ChartRendererBaseClass
-  implements AfterViewInit {
+  implements AfterViewInit, OnInit {
   //  Chart View Height And Width
   @Input() inputChartWidth: number = 820
   @Input() inputChartHeight: number = 500
   @ViewChild('visualization') visualization: ElementRef<HTMLElement>
+  @ViewChild('charToolTip') charToolTip: ElementRef
+
+  // Current Tooltip Trackers
+  IChartToolTip: IChartToolTip[]
 
   constructor() {
     super()
   }
+
+  onGetGenerateChartToolTipData(data:IContainersResosponse) {
+     this.IChartToolTip = []
+    const container_40_fit: IChartToolTip = {
+      markColor: this.onGetColorBasedOnOccupancy(
+        BarOccupancyEnum.container_40_fit,
+      ),
+      value: data?.container_40_fit + ' (40 fit)',
+    }
+
+    const container_20_fit: IChartToolTip = {
+      markColor: this.onGetColorBasedOnOccupancy(
+        BarOccupancyEnum.container_20_fit,
+      ),
+      value: data?.container_20_fit + ' (20 fit)',
+    }
+
+    this.IChartToolTip.push(container_40_fit,container_20_fit)
+  }
+
+  ngOnInit(): void {
+    this.GenericEventRaised$.pipe(debounceTime(100)).subscribe((res) => {
+      if (res?.event === IChartGenericEventEnum.MOUSE_MOVE) {
+        this.onGetGenerateChartToolTipData(res?.data)
+        this.onToolTipRegister(this.charToolTip, null, res?.mouseEvent)
+      } else if (res?.event === IChartGenericEventEnum.MOUSE_OUT) {
+        this.IChartToolTip = []
+        this.onToolTipRegister(this.charToolTip, null, null)
+      }
+    })
+  }
+
   ngAfterContentInit(): void {}
 
   ngAfterViewInit(): void {
@@ -63,8 +99,8 @@ export class ContainersAnalysisChartComponent extends ChartRendererBaseClass
     this.onRender()
     this.onAxisTextRender<d3SelectionBase | string>(
       this.viewSVGGroup,
-      'Weeks',
-      'Containers',
+      'Timer Range',
+      'No of Containers',
     )
   }
 
@@ -92,6 +128,7 @@ export class ContainersAnalysisChartComponent extends ChartRendererBaseClass
     const yScale = this.barChartAxisInstance?.yScale
     const bar = group?.append('rect')?.datum(data)
 
+
     bar
       .attr('x', (d, i, n) =>
         this.onGetBarXScalePosition(
@@ -104,18 +141,6 @@ export class ContainersAnalysisChartComponent extends ChartRendererBaseClass
       .attr('fill', this.onGetColorBasedOnOccupancy(keyName))
       .attr('height', (d, i, n) => this.onGetBarHeight(yScale, keyName, data))
       .attr('y', (d) => this.onGetBarYScalePosition(yScale, 0, keyName, data))
-
-    bar
-      .on('mousemove', (d) => {
-        this.onTooltip<MouseEvent | string | number | IContainersResosponse>(
-          d,
-          keyName,
-          data,
-        )
-      })
-      .on('mouseout', (d) => {
-        d3.select('.legend-tool-tip').style('display','none')
-      })
       .transition()
       .duration(1500)
       .ease(d3.easeBounce)
@@ -126,28 +151,12 @@ export class ContainersAnalysisChartComponent extends ChartRendererBaseClass
         this.onGetBarHeight(yScale, keyName, data, true),
       )
       .delay((d, i) => i * Math.random() * 10)
-  }
-
-  onTooltip<T>(...arg: Array<T>) {
-    const toopTipRef = d3.select('.legend-tool-tip')
-    if (arg === null) {
-      return
+      this.onRegisterEvent(bar, IChartGenericEventEnum.MOUSE_MOVE, data)
+      this.onRegisterEvent(bar, IChartGenericEventEnum.MOUSE_OUT, null)
     }
 
-    const event: MouseEvent = arg[0] as MouseEvent
-    const keyName = arg[1]
-    const data = arg[2]
-
-    toopTipRef
-      .style('display','block')
-      .transition()
-      .ease(d3.easeCircle)
-      .style('top', `${event?.y}px`)
-      .style('left', `${event?.x + 10}px`)
-  }
-
   onGetBarXScalePosition(xScale: number, margin: number, keyName: string) {
-    return xScale +  margin
+    return xScale + margin
   }
 
   onGetBarYScalePosition(
