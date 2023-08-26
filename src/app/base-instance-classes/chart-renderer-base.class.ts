@@ -167,9 +167,8 @@ export abstract class ChartRendererBaseClass extends ChartEventRegisterClass
       .scaleBand()
       .range(axisOutlines[0]?.ranges as any)
       .domain(axisOutlines[0]?.domains)
-      .align(1)
-      .round(true)
-    // .padding(1)
+
+    .padding(1)
 
     svgGroup
       .append('g')

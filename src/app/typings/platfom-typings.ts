@@ -32,6 +32,11 @@ export interface ICellsOccupancyResponse {
   reserved?: string
 }
 
+export interface ILaborsMachineResponse {
+    labors:Points[],
+    machines:Points[]
+}
+
 export interface IContainersResosponse {
   container_20_fit: number | string
   container_40_fit: number | string
@@ -81,4 +86,10 @@ export enum BarChartRenderingType {
 export interface IChartToolTip {
   markColor: string
   value: string
+}
+
+
+export interface  Points {
+   x:number;
+   y:number;
 }
