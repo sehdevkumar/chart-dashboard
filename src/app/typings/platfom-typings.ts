@@ -33,19 +33,21 @@ export interface ICellsOccupancyResponse {
 }
 
 export interface IContainersResosponse {
-  container_20_fit:number;
-  container_40_fit:number;
+  container_20_fit: number | string
+  container_40_fit: number | string
   id: string
 }
 
-export enum BarOccupancyEnum {
+export enum ChartOccupancyEnum {
   spillOver = 'spillOver',
   available = 'available',
   occupied = 'occupied',
   reserved = 'reserved',
-  container_40_fit='container_40_fit',
-   container_20_fit='container_20_fit',
+  container_40_fit = 'container_40_fit',
+  container_20_fit = 'container_20_fit',
   hollow = 'hollow',
+  labor='labor',
+ machine='machine'
 }
 
 export interface IViewDimConfig {
@@ -76,8 +78,7 @@ export enum BarChartRenderingType {
   YEARLY = 'YEARLY',
 }
 
-
-export interface IChartToolTip{
-   markColor:string;
-   value:string;
+export interface IChartToolTip {
+  markColor: string
+  value: string
 }

@@ -10,7 +10,7 @@ import {
 } from '@angular/core'
 import {
   BarChartRenderingType,
-  BarOccupancyEnum,
+  ChartOccupancyEnum,
   ChartEnumClass,
   IChartAxisInstance,
   ICellsOccupancyResponse,
@@ -50,7 +50,7 @@ export class BarchartComponent extends ChartRendererBaseClass
   ngOnInit(): void {
     this.GenericEventRaised$.pipe(debounceTime(100)).subscribe((res) => {
       if (res?.event === IChartGenericEventEnum.MOUSE_MOVE) {
-        this.onGetGenerateChartToolTipData(res?.data)
+        this.IChartToolTip =  this.onGetGenerateChartToolTipData(res?.data)
         this.onToolTipRegister(this.charToolTip,null, res?.mouseEvent)
       } else if (res?.event === IChartGenericEventEnum.MOUSE_OUT) {
         this.IChartToolTip = []
@@ -61,17 +61,45 @@ export class BarchartComponent extends ChartRendererBaseClass
 
 
   onGetGenerateChartToolTipData(data:ICellsOccupancyResponse) {
-    console.log(data)
-     this.IChartToolTip = []
-    const container_40_fit: IChartToolTip = {
+   const chartLegend = []
+    const container: IChartToolTip = {
       markColor: this.onGetColorBasedOnOccupancy(
         data['datum'],
       ),
       value: data['datum'],
     }
 
+    chartLegend.push(container)
 
-    this.IChartToolTip.push(container_40_fit)
+    return chartLegend;
+
+  }
+
+  onGetGenerateLeData() {
+   const chartLegend = []
+    const available: IChartToolTip = {
+      markColor: this.onGetColorBasedOnOccupancy(
+        ChartOccupancyEnum.available
+      ),
+      value:  ChartOccupancyEnum.available,
+    }
+     const spillOver: IChartToolTip = {
+      markColor: this.onGetColorBasedOnOccupancy(
+        ChartOccupancyEnum.spillOver
+      ),
+      value:  ChartOccupancyEnum.spillOver,
+    }
+     const occupied: IChartToolTip = {
+      markColor: this.onGetColorBasedOnOccupancy(
+        ChartOccupancyEnum.occupied
+      ),
+      value:  ChartOccupancyEnum.occupied,
+    }
+
+    chartLegend.push(available,occupied,spillOver)
+
+    return chartLegend;
+
   }
 
   ngAfterViewInit(): void {
@@ -102,6 +130,9 @@ export class BarchartComponent extends ChartRendererBaseClass
       'Weeks',
       'Occupancy percentage',
     )
+
+    this.onDrawChartLegends<d3SelectionBase | IChartToolTip[] | boolean>(this.viewSVGGroup,this.onGetGenerateLeData(),false);
+
   }
 
   onRender() {
@@ -148,8 +179,12 @@ export class BarchartComponent extends ChartRendererBaseClass
       )
       .attr('y', (d) => this.onGetBarYScalePosition(yScale(0), 0, keyName))
 
-      this.onRegisterEvent(bar, IChartGenericEventEnum.MOUSE_MOVE, data,keyName)
-      this.onRegisterEvent(bar, IChartGenericEventEnum.MOUSE_OUT,  data,keyName)
+      // Do not Registered the Over Events For the Hollow Bar
+      if(keyName!==ChartOccupancyEnum.hollow) {
+        this.onRegisterEvent(bar, IChartGenericEventEnum.MOUSE_MOVE, data,keyName)
+        this.onRegisterEvent(bar, IChartGenericEventEnum.MOUSE_OUT,  data,keyName)
+
+      }
 
     bar
       .transition()
@@ -172,7 +207,7 @@ export class BarchartComponent extends ChartRendererBaseClass
   }
 
   onGetBarYScalePosition(xScale: number, margin: number, keyName: string) {
-    if (keyName === BarOccupancyEnum.hollow) {
+    if (keyName === ChartOccupancyEnum.hollow) {
       return xScale
     }
 
@@ -184,7 +219,7 @@ export class BarchartComponent extends ChartRendererBaseClass
   }
 
   onGetBarHeight(bandHeight: number, keyName: string, isAnimation = false) {
-    if (keyName === BarOccupancyEnum.hollow) {
+    if (keyName === ChartOccupancyEnum.hollow) {
       return isAnimation
         ? this.viewDimConfig?.viewHeight
         : this.viewDimConfig?.viewHeight - bandHeight
@@ -202,18 +237,18 @@ export class BarchartComponent extends ChartRendererBaseClass
    */
   onGetColorBasedOnOccupancy(keyName: string): string {
     switch (keyName) {
-      case BarOccupancyEnum.spillOver:
+      case ChartOccupancyEnum.spillOver:
         return '#F78D8D'
 
-      case BarOccupancyEnum.available:
+      case ChartOccupancyEnum.available:
         return '#909090'
 
-      case BarOccupancyEnum.occupied:
+      case ChartOccupancyEnum.occupied:
         return '#92D04E'
 
-      case BarOccupancyEnum.reserved:
+      case ChartOccupancyEnum.reserved:
         return 'blue'
-      case BarOccupancyEnum.hollow:
+      case ChartOccupancyEnum.hollow:
         return '#f1f1f1'
     }
 

@@ -1,3 +1,4 @@
+import { d3SelectionBase } from './../typings/platfom-typings';
 import {
   AfterViewInit,
   Component,
@@ -10,10 +11,9 @@ import { ChartRendererBaseClass } from '../base-instance-classes/chart-renderer-
 import * as d3 from 'd3'
 import {
   IViewDimConfig,
-  d3SelectionBase,
   BarChatOutline,
   ChartEnumClass,
-  BarOccupancyEnum,
+  ChartOccupancyEnum,
   IContainersResosponse,
   IChartToolTip,
 } from '../typings/platfom-typings'
@@ -42,28 +42,29 @@ export class ContainersAnalysisChartComponent extends ChartRendererBaseClass
   }
 
   onGetGenerateChartToolTipData(data:IContainersResosponse) {
-     this.IChartToolTip = []
+    const IChartToolTip = []
     const container_40_fit: IChartToolTip = {
       markColor: this.onGetColorBasedOnOccupancy(
-        BarOccupancyEnum.container_40_fit,
+        ChartOccupancyEnum.container_40_fit,
       ),
       value: data?.container_40_fit + ' (40 fit)',
     }
 
     const container_20_fit: IChartToolTip = {
       markColor: this.onGetColorBasedOnOccupancy(
-        BarOccupancyEnum.container_20_fit,
+        ChartOccupancyEnum.container_20_fit,
       ),
       value: data?.container_20_fit + ' (20 fit)',
     }
 
-    this.IChartToolTip.push(container_40_fit,container_20_fit)
+    IChartToolTip.push(container_40_fit,container_20_fit)
+    return IChartToolTip;
   }
 
   ngOnInit(): void {
     this.GenericEventRaised$.pipe(debounceTime(100)).subscribe((res) => {
       if (res?.event === IChartGenericEventEnum.MOUSE_MOVE) {
-        this.onGetGenerateChartToolTipData(res?.data)
+        this.IChartToolTip =  this.onGetGenerateChartToolTipData(res?.data)
         this.onToolTipRegister(this.charToolTip, null, res?.mouseEvent)
       } else if (res?.event === IChartGenericEventEnum.MOUSE_OUT) {
         this.IChartToolTip = []
@@ -102,6 +103,15 @@ export class ContainersAnalysisChartComponent extends ChartRendererBaseClass
       'Timer Range',
       'No of Containers',
     )
+
+    const legenData:IContainersResosponse = {
+      container_20_fit: '',
+      container_40_fit: '',
+      id: ''
+    }
+    const chartLegends:IChartToolTip[] = this.onGetGenerateChartToolTipData(legenData);
+
+    this.onDrawChartLegends<d3SelectionBase | IChartToolTip[] | boolean>(this.viewSVGGroup,chartLegends,false);
   }
 
   onRender() {
@@ -169,13 +179,13 @@ export class ContainersAnalysisChartComponent extends ChartRendererBaseClass
     let newYScale = yScale(0)
 
     if (isAnimation) {
-      const is40FitContainer = BarOccupancyEnum.container_40_fit === keyName
+      const is40FitContainer = ChartOccupancyEnum.container_40_fit === keyName
       newYScale = is40FitContainer
-        ? yScale(datum?.[BarOccupancyEnum.container_20_fit]) -
+        ? yScale(datum?.[ChartOccupancyEnum.container_20_fit]) -
           this.onGetBarHeight(yScale, keyName, datum)
-        : yScale(datum?.[BarOccupancyEnum.container_20_fit])
+        : yScale(datum?.[ChartOccupancyEnum.container_20_fit])
     } else {
-      const is40FitContainer = BarOccupancyEnum.container_40_fit === keyName
+      const is40FitContainer = ChartOccupancyEnum.container_40_fit === keyName
       newYScale = is40FitContainer
         ? yScale(0) - this.onGetBarHeight(yScale, keyName, datum)
         : yScale(0) - this.onGetBarHeight(yScale, keyName, datum)
@@ -197,17 +207,17 @@ export class ContainersAnalysisChartComponent extends ChartRendererBaseClass
     let newHeight = yScale(0)
 
     if (isAnimation) {
-      const is40FitContainer = BarOccupancyEnum.container_40_fit === keyName
+      const is40FitContainer = ChartOccupancyEnum.container_40_fit === keyName
       newHeight = is40FitContainer
         ? this.viewDimConfig?.viewHeight -
-          yScale(datum?.[BarOccupancyEnum.container_40_fit])
+          yScale(datum?.[ChartOccupancyEnum.container_40_fit])
         : this.viewDimConfig?.viewHeight -
-          yScale(datum?.[BarOccupancyEnum.container_20_fit])
+          yScale(datum?.[ChartOccupancyEnum.container_20_fit])
     } else {
-      const is40FitContainer = BarOccupancyEnum.container_40_fit === keyName
+      const is40FitContainer = ChartOccupancyEnum.container_40_fit === keyName
       newHeight = is40FitContainer
         ? this.viewDimConfig?.viewHeight -
-          yScale(datum?.[BarOccupancyEnum.container_40_fit])
+          yScale(datum?.[ChartOccupancyEnum.container_40_fit])
         : this.viewDimConfig?.viewHeight - yScale(0)
     }
 
@@ -221,10 +231,10 @@ export class ContainersAnalysisChartComponent extends ChartRendererBaseClass
    */
   onGetColorBasedOnOccupancy(keyName: string): string {
     switch (keyName) {
-      case BarOccupancyEnum.container_20_fit:
+      case ChartOccupancyEnum.container_20_fit:
         return '#FB9E13'
 
-      case BarOccupancyEnum.container_40_fit:
+      case ChartOccupancyEnum.container_40_fit:
         return '#008EBB'
     }
 

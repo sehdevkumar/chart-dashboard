@@ -1,3 +1,4 @@
+import { IChartToolTip } from './../typings/platfom-typings'
 import { Input, ElementRef, Component } from '@angular/core'
 import { IChartRendererBase } from '../typings/chart-base-typings'
 import {
@@ -5,7 +6,7 @@ import {
   IChartAxisInstance,
   d3SelectionBase,
   BarChatOutline,
-  BarOccupancyEnum,
+  ChartOccupancyEnum,
 } from '../typings/platfom-typings'
 import * as d3 from 'd3'
 import { ChartEventRegisterClass } from './chart-generic-event-register.class'
@@ -13,7 +14,8 @@ import { ChartEventRegisterClass } from './chart-generic-event-register.class'
 /**
  * Base abstract class for chart rendering.
  */
-export abstract class ChartRendererBaseClass extends ChartEventRegisterClass implements IChartRendererBase {
+export abstract class ChartRendererBaseClass extends ChartEventRegisterClass
+  implements IChartRendererBase {
   /** Width of the chart. */
   chartWidth: number
 
@@ -24,15 +26,17 @@ export abstract class ChartRendererBaseClass extends ChartEventRegisterClass imp
   chartContainer: ElementRef<HTMLElement>
 
   /** Configuration for the dimensions of the chart view. */
-   viewDimConfig: IViewDimConfig
+  viewDimConfig: IViewDimConfig
 
   /** Instance of the chart's bar chart axis, if applicable. */
-   barChartAxisInstance?: IChartAxisInstance
+  barChartAxisInstance?: IChartAxisInstance
 
   /** Reference to the SVG group element that contains the chart's view. */
-   viewSVGGroup: d3SelectionBase
+  viewSVGGroup: d3SelectionBase
 
-   GlobalBarOccupancyEnum = BarOccupancyEnum
+  GlobalChartOccupancyEnum = ChartOccupancyEnum
+
+  // Just Track the Current Legend Text Length
 
   abstract onRender(): void
 
@@ -40,19 +44,36 @@ export abstract class ChartRendererBaseClass extends ChartEventRegisterClass imp
     super()
   }
 
-  init(
-    chartContainer?: ElementRef<HTMLElement>,
-  ) {
+  init(chartContainer?: ElementRef<HTMLElement>) {
     this.chartContainer = chartContainer
     this.viewDimConfig = this.onConstructViewDimConfig(this.chartContainer)
     this.viewSVGGroup = this.onCreateSVGViewGroup(this.viewDimConfig)
   }
 
-
   onDrawChartLegends<T>(...args: T[]): void {
+    const [group, IChartToolTip, isVertical] = (args as unknown) as [
+      d3SelectionBase,
+      IChartToolTip[],
+      boolean,
+    ]
+    IChartToolTip?.forEach((ich, i) => {
 
+      group
+        ?.append('circle')
+        .attr('cx', isVertical ?  this.viewDimConfig?.viewWidth - (ich?.value?.length+ 60 * (i + 1))  : this.viewDimConfig?.viewWidth - 60  )
+        .attr('cy', isVertical ?  24 : 20 * i)
+        .attr('r', 8)
+        .attr('fill', ich?.markColor)
+
+      group
+        ?.append('text')
+        .text(ich?.value?.replace('(','').replace(')',''))
+        .attr('x', isVertical   ?  this.viewDimConfig?.viewWidth - (ich?.value?.length + 40 * (i + 1))  :this.viewDimConfig?.viewWidth - 20)
+        .attr('y',  isVertical  ?  28   :  20 * i + 4)
+        .style('text-anchor', 'middle')
+        .style('font-size', `clamp(12px,0.5vw,18px)`)
+    })
   }
-
 
   /**
    * Callback function for rendering axis text.
@@ -70,7 +91,7 @@ export abstract class ChartRendererBaseClass extends ChartEventRegisterClass imp
       .attr('x', this.viewDimConfig?.viewWidth / 2)
       .attr('y', this.viewDimConfig?.viewHeight + 50)
       .style('text-anchor', 'middle')
-       .style('font-size',`clamp(12px,0.5vw,18px)`)
+      .style('font-size', `clamp(12px,0.5vw,18px)`)
 
     xAxisLabelGroup?.raise()
 
@@ -85,7 +106,7 @@ export abstract class ChartRendererBaseClass extends ChartEventRegisterClass imp
           this.viewDimConfig?.viewHeight / 2
         }) rotate(-90)`,
       )
-      .style('font-size',`clamp(12px,0.5vw,18px)`)
+      .style('font-size', `clamp(12px,0.5vw,18px)`)
       .style('text-anchor', 'middle')
 
     yAxisLabelGroup?.raise()
@@ -148,7 +169,7 @@ export abstract class ChartRendererBaseClass extends ChartEventRegisterClass imp
       .domain(axisOutlines[0]?.domains)
       .align(1)
       .round(true)
-      // .padding(1)
+    // .padding(1)
 
     svgGroup
       .append('g')
@@ -187,7 +208,7 @@ export abstract class ChartRendererBaseClass extends ChartEventRegisterClass imp
     const rendererHeight = chartContainer?.nativeElement?.offsetHeight
     const rendererWidth = chartContainer?.nativeElement?.offsetWidth
 
-    const margin = { top: 20, right: 30, bottom: 90, left: 50 }
+    const margin = { top: 60, right: 30, bottom: 90, left: 50 }
     const viewWidth = rendererWidth - margin.left - margin.right
     const viewHeight = rendererHeight - margin.top - margin.bottom
 
