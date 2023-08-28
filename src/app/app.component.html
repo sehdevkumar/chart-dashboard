@@ -1,21 +1,41 @@
-<select class="form-select" style="width:200px" (change)="onChange($event)">
-   <option value="MONTHLY">Monthly</option>
-   <option value="WEEKLY">Weekly</option>
-   <option value="YEARLY">Yearly</option>
+<select class="form-select" style="width: 200px;" (change)="onChange($event)">
+  <option value="MONTHLY">Monthly</option>
+  <option value="WEEKLY">Weekly</option>
+  <option value="YEARLY">Yearly</option>
 </select>
 <div
   class="container-fluid mt-4"
   style="
     display: grid;
-    grid-template-columns: repeat(2, minmax(0,1fr));
+    grid-template-columns: repeat(auto-fit, minmax(800px, 1fr));
     height: 100%;
     width: 100%;
     overflow: hidden;
     gap: 20px;
   "
 >
-  <app-barchart [chartRenderingType]="changeFlag" [inputChartWidth]="700" [inputChartHeight]="350"></app-barchart>
- <app-lines-chart  [inputChartWidth]="700" [inputChartHeight]="350"></app-lines-chart>
- <app-containers-analysis-chart [inputChartWidth]="700" [inputChartHeight]="350"></app-containers-analysis-chart>
 
+<div>
+  <app-lines-chart
+    [inputChartWidth]="700"
+    [inputChartHeight]="350"
+  ></app-lines-chart>
+</div>
+
+<div>
+  <app-barchart
+    [chartRenderingType]="changeFlag"
+    [inputChartWidth]="700"
+    [inputChartHeight]="350"
+  ></app-barchart>
+
+</div>
+
+<div>
+  <app-containers-analysis-chart
+    [inputChartWidth]="700"
+    [inputChartHeight]="350"
+  ></app-containers-analysis-chart>
+
+</div>
 </div>

@@ -103,17 +103,44 @@ export class LinesChartComponent extends ChartRendererBaseClass
     this.onStartRenderingLineChart(machines, ChartOccupancyEnum.machine)
     this.onStartRenderingLineChart(labors, ChartOccupancyEnum.labor)
 
-    this.onDrawBackdropOverlay()
+    this.onDrawBackdropOverlay(labors,machines)
   }
 
-  onDrawBackdropOverlay() {
-     const group = this.barChartAxisInstance?.viewGroup
-     const h = this.barChartAxisInstance?.viewDimConfig?.viewHeight;
-     const w = this.barChartAxisInstance?.viewDimConfig?.viewWidth;
+  /**
+   *  This backdrop Overlay used to get the index for domain or Data which is provided
+   *  eventually it is needed when we wanted to draw a line between to data points
+   * @param labors
+   * @param machines
+   */
+  onDrawBackdropOverlay(labors:Points[],machines:Points[]) {
+    const group = this.barChartAxisInstance?.viewGroup
+    const h = this.barChartAxisInstance?.viewDimConfig?.viewHeight
+    const w = this.barChartAxisInstance?.viewDimConfig?.viewWidth
 
-     console.log(group,h,w)
+   const backDropRect = group
+      ?.append('rect')
+      .attr('width', w)
+      .attr('height', h)
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('fill', 'transparent')
+      .on('mousemove', (d, n) => {
+        const xScale = this.barChartAxisInstance?.xScale
+        const yScale = this.barChartAxisInstance?.yScale
+        const Point = d3.pointer(d)
+        const xPoint = Point[0]
+        const yPoint = Point[1]
+
+        const yExactPoint = (yScale as any)?.invert(yPoint)
+
+        // Calculate the index based on the position of the pointer
+        const index = Math?.floor(xPoint / (xScale as any)?.step())
+
+        // Ensure the index is within bounds
+        if (index >= 0 && index < 6) {
+        }
+      })
   }
-
 
   onStartRenderingLineChart(
     data: Points[],
@@ -135,7 +162,7 @@ export class LinesChartComponent extends ChartRendererBaseClass
       return d3
         .area()
         .y0((p) => yScale(0))
-        .x((p) =>  (boolean ? xScale(0) : xScale(xDomain[p['x']])))
+        .x((p) => (boolean ? xScale(0) : xScale(xDomain[p['x']])))
         .y1((p) => (boolean ? yScale(0) : yScale(p['y'])))(datum)
     }
 
@@ -158,11 +185,11 @@ export class LinesChartComponent extends ChartRendererBaseClass
       .attr('stroke-dasharray', length + ' ' + length)
       .attr('stroke-dashoffset', length)
       .transition()
-      .ease(d3.easeBounceOut)
-      .duration(3000)
+      .ease(d3.easeCircle)
+      .duration(1000)
       .attr('stroke-dashoffset', 0)
       .attr('d', (d) => area(d, false))
-      .attr('opacity', 0.9)
+      .attr('opacity', 0.4)
       .on('end', () => {
         lineGroup
           .selectAll('circle')
@@ -173,6 +200,8 @@ export class LinesChartComponent extends ChartRendererBaseClass
           .attr('cy', (d) => yScale(d['y']))
           .transition()
           .attr('r', 4)
+          .attr('opacity', 0.4)
+
           .attr('fill', this.onGetColorBasedOnOccupancy(chartOccupancyEnum))
       })
   }

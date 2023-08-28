@@ -173,6 +173,7 @@ export abstract class ChartRendererBaseClass extends ChartEventRegisterClass
       .range(axisOutlines[0]?.ranges as any)
       .domain(axisOutlines[0]?.domains)
 
+
     // .padding(1)
     .paddingInner(padding ?? 0)
 
