@@ -56,16 +56,18 @@ export abstract class ChartRendererBaseClass extends ChartEventRegisterClass
       IChartToolTip[],
       boolean,
     ]
+
+    const legendsGroup = group?.append('g').attr('class',`legends-group`)
     IChartToolTip?.forEach((ich, i) => {
 
-      group
+      legendsGroup
         ?.append('circle')
         .attr('cx', isVertical ?  this.viewDimConfig?.viewWidth - (ich?.value?.length+ 60 * (i + 1))  : this.viewDimConfig?.viewWidth - 60  )
         .attr('cy', isVertical ?  24 : 20 * i)
         .attr('r', 8)
         .attr('fill', ich?.markColor)
 
-      group
+      legendsGroup
         ?.append('text')
         .text(ich?.value?.replace('(','').replace(')',''))
         .attr('x', isVertical   ?  this.viewDimConfig?.viewWidth - (ich?.value?.length + 40 * (i + 1))  :this.viewDimConfig?.viewWidth - 20)
@@ -73,6 +75,8 @@ export abstract class ChartRendererBaseClass extends ChartEventRegisterClass
         .style('text-anchor', 'middle')
         .style('font-size', `clamp(12px,0.5vw,18px)`)
     })
+
+    legendsGroup.attr('transform',`translate(0, -50)`)
   }
 
   /**
@@ -126,7 +130,7 @@ export abstract class ChartRendererBaseClass extends ChartEventRegisterClass
     ]
     this.onRemoveAxisGroup()
     const xAxisOutline: BarChatOutline<any> = {
-      ticksIndices: [0, 1, 2, 3, 4],
+      ticksIndices: [0, 1, 2, 3, 4,5],
       values: [],
       domains: xdomains,
       ranges: xRange,
@@ -157,10 +161,11 @@ export abstract class ChartRendererBaseClass extends ChartEventRegisterClass
    * @returns An instance of the chart's axis.
    */
   onCreateChartAxis?<T>(...args: T[]): IChartAxisInstance {
-    const [svgGroup, viewDimConfig, axisOutlines] = (args as unknown) as [
+    const [svgGroup, viewDimConfig, axisOutlines,padding] = (args as unknown) as [
       d3SelectionBase,
       IViewDimConfig,
       BarChatOutline<any>[],
+      number
     ]
 
     const xScale = d3
@@ -168,7 +173,8 @@ export abstract class ChartRendererBaseClass extends ChartEventRegisterClass
       .range(axisOutlines[0]?.ranges as any)
       .domain(axisOutlines[0]?.domains)
 
-    .padding(1)
+    // .padding(1)
+    .paddingInner(padding ?? 0)
 
     svgGroup
       .append('g')
@@ -183,7 +189,7 @@ export abstract class ChartRendererBaseClass extends ChartEventRegisterClass
       .domain(axisOutlines[1]?.domains)
       .range(axisOutlines[1]?.ranges as any)
 
-    svgGroup.append('g').call(d3.axisLeft(yScale).tickSize(10).ticks(4))
+    svgGroup.append('g').call(d3.axisLeft(yScale).tickSize(10).ticks(5))
 
     const BarChartAxisInstance: IChartAxisInstance = {
       xScale: xScale,
@@ -207,7 +213,7 @@ export abstract class ChartRendererBaseClass extends ChartEventRegisterClass
     const rendererHeight = chartContainer?.nativeElement?.offsetHeight
     const rendererWidth = chartContainer?.nativeElement?.offsetWidth
 
-    const margin = { top: 60, right: 30, bottom: 90, left: 50 }
+    const margin = { top: 60, right: 60, bottom: 90, left: 60 }
     const viewWidth = rendererWidth - margin.left - margin.right
     const viewHeight = rendererHeight - margin.top - margin.bottom
 

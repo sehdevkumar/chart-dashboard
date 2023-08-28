@@ -63,9 +63,9 @@ export class LinesChartComponent extends ChartRendererBaseClass
   onWeekly() {
     const xDomains = ['week1', 'week2', 'week3', 'week4', 'week5']
 
-    const xRange = [1, this.viewDimConfig?.viewWidth]
+    const xRange = [0, this.viewDimConfig?.viewWidth]
 
-    const yDomains = [0, 30]
+    const yDomains = [0, 100]
     const yRange = [this.viewDimConfig?.viewHeight, 0]
 
     const axisOutlines = this.onGetGenerateAxisDomainRangeOutlines<
@@ -73,8 +73,8 @@ export class LinesChartComponent extends ChartRendererBaseClass
     >(xDomains, xRange, yDomains, yRange)
 
     this.barChartAxisInstance = this.onCreateChartAxis<
-      IViewDimConfig | d3SelectionBase | Array<BarChatOutline<string>>
-    >(this.viewSVGGroup, this.viewDimConfig, axisOutlines)
+      IViewDimConfig | d3SelectionBase | Array<BarChatOutline<string>> | number
+    >(this.viewSVGGroup, this.viewDimConfig, axisOutlines, 1)
 
     this.onRender()
     this.onAxisTextRender<d3SelectionBase | string>(
@@ -100,10 +100,20 @@ export class LinesChartComponent extends ChartRendererBaseClass
     const labors = laborsMachinesData?.labors
     const machines = laborsMachinesData?.machines
 
-    this.onStartRenderingLineChart(machines,ChartOccupancyEnum.machine)
-    this.onStartRenderingLineChart(labors,ChartOccupancyEnum.labor)
+    this.onStartRenderingLineChart(machines, ChartOccupancyEnum.machine)
+    this.onStartRenderingLineChart(labors, ChartOccupancyEnum.labor)
 
+    this.onDrawBackdropOverlay()
   }
+
+  onDrawBackdropOverlay() {
+     const group = this.barChartAxisInstance?.viewGroup
+     const h = this.barChartAxisInstance?.viewDimConfig?.viewHeight;
+     const w = this.barChartAxisInstance?.viewDimConfig?.viewWidth;
+
+     console.log(group,h,w)
+  }
+
 
   onStartRenderingLineChart(
     data: Points[],
@@ -112,42 +122,59 @@ export class LinesChartComponent extends ChartRendererBaseClass
     const xScale = this.barChartAxisInstance?.xScale
     const yScale = this.barChartAxisInstance?.yScale
 
-    const xDomain = this.barChartAxisInstance.axisOutlines[0]?.domains;
+    const xDomain = this.barChartAxisInstance.axisOutlines[0]?.domains
 
-    const line = d3
-      ?.line()
-      .x((d) => xScale(xDomain[d['x']]))
-      .y((d) => yScale(d['y']))
+    // For Line Chart Use This
+    // const line = d3
+    //   ?.line()
+    //   ?.x((d) => xScale(xDomain[d['x']]))
 
+    //   ?.y((d) => yScale(d['y']))
 
-    const lineGroup = this.viewSVGGroup?.append('g')?.attr('class',`{line-group}-${chartOccupancyEnum}`);
+    const area = (datum, boolean) => {
+      return d3
+        .area()
+        .y0((p) => yScale(0))
+        .x((p) =>  (boolean ? xScale(0) : xScale(xDomain[p['x']])))
+        .y1((p) => (boolean ? yScale(0) : yScale(p['y'])))(datum)
+    }
 
-    lineGroup
+    const lineGroup = this.viewSVGGroup
+      ?.append('g')
+      ?.attr('class', `{line-group}-${chartOccupancyEnum}`)
+
+    const path = lineGroup
       .append('path')
       .datum(data)
       .attr('class', 'line')
-      .transition()
-      .duration(1500)
-      .ease(d3.easeSinInOut)
-      .delay((d, i) => i * Math.random() * 100)
-      .attr('d', (line as unknown) as string)
-      .attr('fill', 'none')
+      .attr('fill', this.onGetColorBasedOnOccupancy(chartOccupancyEnum))
+      .attr('d', (d) => area(d, true))
       .attr('stroke', this.onGetColorBasedOnOccupancy(chartOccupancyEnum))
-      .attr('stroke-width', 2)
+      .attr('stroke-width', 5)
+      .attr('opacity', 0.1)
 
-  lineGroup
-     .selectAll('circle')
-      .data(data)
-      .enter()
-      .append('circle')
+    const length = path?.node()?.getTotalLength()
+    path
+      .attr('stroke-dasharray', length + ' ' + length)
+      .attr('stroke-dashoffset', length)
       .transition()
-      .duration(1500)
-      .ease(d3.easeSinInOut)
-      .delay((d, i) => i * Math.random() * 100)
-      .attr('cx', (d) => xScale(xDomain[d['x']]))
-      .attr('cy', (d) => yScale(d['y']))
-      .attr('r', 4) // Radius of the circles
-      .attr('fill', this.onGetColorBasedOnOccupancy(chartOccupancyEnum)) // Circle fill color
+      .ease(d3.easeBounceOut)
+      .duration(3000)
+      .attr('stroke-dashoffset', 0)
+      .attr('d', (d) => area(d, false))
+      .attr('opacity', 0.9)
+      .on('end', () => {
+        lineGroup
+          .selectAll('circle')
+          .data(data)
+          .enter()
+          .append('circle')
+          .attr('cx', (d) => xScale(xDomain[d['x']]))
+          .attr('cy', (d) => yScale(d['y']))
+          .transition()
+          .attr('r', 4)
+          .attr('fill', this.onGetColorBasedOnOccupancy(chartOccupancyEnum))
+      })
   }
 
   /**
