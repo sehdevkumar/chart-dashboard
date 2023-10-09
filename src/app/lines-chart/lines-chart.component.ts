@@ -131,14 +131,23 @@ export class LinesChartComponent extends ChartRendererBaseClass
         const xPoint = Point[0]
         const yPoint = Point[1]
 
-        const yExactPoint = (yScale as any)?.invert(yPoint)
+        const yExactPoint =   (yScale as any)?.invert(yPoint)
 
         // Calculate the index based on the position of the pointer
         const index = Math?.floor(xPoint / (xScale as any)?.step())
 
         // Ensure the index is within bounds
         if (index >= 0 && index < 6) {
+
+          const findDataPointMachine = machines?.find(point=>  point?.y === Math.floor(yExactPoint));
+
+
         }
+        const findDataPointLabor = labors?.reduce((acc,val)=> acc.concat(val?.y) ,[]);
+        if(findDataPointLabor.includes(Math.floor(yExactPoint))) {
+            console.log("yes",findDataPointLabor.indexOf(Math.floor(yExactPoint)),index)
+        }
+
       })
   }
 
